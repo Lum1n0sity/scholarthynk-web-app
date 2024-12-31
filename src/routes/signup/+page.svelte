@@ -1,4 +1,5 @@
 <script>
+  import { browser } from '$app/environment';
   import logo from '$lib/assets/logo.png';
   let isRememberChecked = false;
   let isPasswordVisible = false;
@@ -37,8 +38,8 @@
         return response.json();
       })
     .then(data => {
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
+      if (browser && data.authToken) {
+        localStorage.setItem('authToken', data.authToken);
         //window.location.href = '/onboarding';
       } else {
         //window.location.href = '/onboarding';

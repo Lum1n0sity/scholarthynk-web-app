@@ -1,5 +1,41 @@
 <script>
+  import { onMount } from 'svelte';
   import logo from '$lib/assets/logo.png';
+
+  let authToken = '';
+
+  onMount(() => {
+    authToken = localStorage.getItem('authToken') || '';
+    verifyToken();
+  });
+
+  console.log(authToken);
+
+  function verifyToken() {
+    if (authToken) {
+      fetch('http://localhost:3000/api/verify', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(response => {
+        if (response.status != 200) {
+          localStorage.removeItem('authToken');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/home';
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      });
+    }
+  }
 </script>
 
 <div class="body">
