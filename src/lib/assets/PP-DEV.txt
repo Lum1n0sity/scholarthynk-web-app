@@ -1,0 +1,42 @@
+1. Data Controller<br>
+The data controller responsible for your personal data is Upliftcode, reachable at raphael221@outlook.de.
+<br><br>
+2. Data We Collect<br>
+We may collect the following types of personal data:
+Account information (e.g., name, email address).
+Usage data (e.g., app activity, preferences).
+<br><br>
+3. Purpose of Data Processing<br>
+We process your data for the following purposes:<br>
+- To provide and maintain the App.<br>
+- To improve the user experience.<br>
+- To communicate updates and information.<br>
+<br>
+4. Legal Basis for Processing<br>
+Our legal bases for processing your data include:<br>
+- Your consent (Article 6(1)(a) GDPR).<br>
+- Performance of a contract (Article 6(1)(b) GDPR).<br>
+- Compliance with legal obligations (Article 6(1)(c) GDPR).<br>
+<br>
+5. Data Sharing<br>
+We do not sell or share your personal data with third parties, except:<br>
+- When required by law.<br>
+- To service providers acting on our behalf (e.g., hosting services).<br>
+<br>
+6. Data Retention<br>
+Your data will be retained for as long as necessary to fulfill the purposes outlined in this policy unless a longer retention period is required by law.
+<br><br>
+7. Your Rights<br>
+Under the GDPR, you have the following rights:<br>
+- Access: Request a copy of your personal data.<br>
+- Rectification: Request corrections to inaccurate data.<br>
+- Erasure: Request deletion of your data.<br>
+- Objection: Object to data processing.<br>
+- Data Portability: Request transfer of your data to another service.<br>
+To exercise these rights, contact us at raphael221@outlook.de.<br>
+<br>
+8. Security<br>
+We take appropriate technical and organizational measures to protect your data against unauthorized access, loss, or misuse.
+<br><br>
+9. Changes to This Policy<br>
+We may update this Privacy Policy from time to time. Changes will be posted here, and we encourage you to review the policy periodically.

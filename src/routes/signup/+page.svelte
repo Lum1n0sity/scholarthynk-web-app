@@ -1,7 +1,6 @@
 <script>
   import { browser } from '$app/environment';
   import logo from '$lib/assets/logo.png';
-  let isRememberChecked = false;
   let isPasswordVisible = false;
 
   let error = '';
@@ -18,7 +17,6 @@
       name: name,
       email: email,
       password: hashedPassword,
-      remember: isRememberChecked,
     });
 
     fetch('http://localhost:3000/api/signup', {
@@ -38,11 +36,9 @@
         return response.json();
       })
     .then(data => {
-      if (browser && data.authToken) {
+      if (browser) {
         localStorage.setItem('authToken', data.authToken);
-        //window.location.href = '/onboarding';
-      } else {
-        //window.location.href = '/onboarding';
+        window.location.href = '/onboarding';
       }
     })
     .catch(error => {showErrorMsg(error);});
@@ -93,11 +89,6 @@
       <button class="show-hide-btn" on:click={showHidePassword}><span class="material-symbols-rounded show-hide-icon">{isPasswordVisible ? 'visibility_off' : 'visibility'}</span></button>
     </div>
   </div>
-  <label>
-    <input type="checkbox" class="material-symbols-rounded" bind:checked={isRememberChecked}>
-    <span class="custom-checkbox"></span>
-    Remember Me
-  </label>
   <button class="button signup" on:click={handleSubmit}>Sign Up</button>
 </div>
 
@@ -273,56 +264,6 @@
     font-weight: bold;
   }
 
-  label {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: 40%;
-    height: 10%;
-    margin-top: 1%;
-  }
-
-  input[type="checkbox"] {
-    display: none;
-  }
-
-  /* Custom checkbox container */
-  .custom-checkbox {
-    width: 7%;
-    height: 54%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    position: relative;
-    cursor: pointer;
-    background-color: #C2C2C2;
-    margin-right: 1%;
-  }
-
-  /* Add a checkmark when checked */
-  input[type="checkbox"]:checked + .custom-checkbox::after {
-    content: "";
-    display: inline-block;
-    font-family: 'Material Symbols Rounded';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 3rem;
-    color: white;
-    content: 'check'
-  }
-
-  /* Background color for checked state */
-  input[type="checkbox"]:checked + .custom-checkbox {
-    background-color: #E65A41;
-  }
-
-  label {
-    font-size: 2.7rem;
-    font-weight: bold;
-  }
-
   .button {
     display: flex;
     align-items: center;
@@ -341,6 +282,6 @@
     font-size: 2.7rem;
     font-weight: bold;
     color: white;
-    margin-top: 1% !important;
+    margin-top: 5% !important;
   }
 </style>
