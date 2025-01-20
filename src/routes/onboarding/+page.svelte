@@ -24,6 +24,15 @@
   let fileInput;
   let file;
 
+  onMount(() => {
+    if (browser) {
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        window.location.href = '/signup';
+      }
+    }
+  });
+
   async function openTosPPPopupHandler(popupType) {
     openTosPPPopup = true;
     popupTitle = popupType;
@@ -227,6 +236,7 @@
         });
 
         const data = await response.json();
+
         if (data.success) {
           username = data.user.name;
           userId = data.user.userId;
@@ -243,7 +253,7 @@
             const bgColor = generateBgColor();
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+            
             ctx.font = 'bold 80px Arial';
             ctx.fillStyle = '#FFFFFF';
             ctx.textAlign = 'center';
@@ -254,6 +264,8 @@
             
             imgWrapper.innerHTML = '';
             imgWrapper.appendChild(canvas);
+          } else {
+            showErrorMsg('Unable to generate profile picture');
           }
         } else {
           showErrorMsg(data.error);
@@ -783,12 +795,16 @@
   }
 
   .img-wrapper {
-    width: 25%;
-    height: 43%;
+    width: 13vw;
+    aspect-ratio: 1;
     background-color: #fff;
     margin-top: 3%;
     border-radius: 6px;
     box-shadow: 0px 0px 93.7px 2px rgba(0,0,0,0.47);
+    display: flex; /* Use flexbox for aligning content */
+    justify-content: center;
+    align-items: center; /* Center the content (e.g., canvas) inside */
+    position: relative;
   }
 
   .skip {
