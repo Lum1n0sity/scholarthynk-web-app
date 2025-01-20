@@ -42,10 +42,9 @@
       .then(data => {
         if (browser && data.authToken) {
           localStorage.setItem('authToken', data.authToken);
-          //window.location.href = '/home';
+          window.location.href = '/home';
         } else {
-          console.log('no token');
-          //window.location.href = '/home';
+          showErrorMsg('An error occurred. Please try again later.');
         }
       })
       .catch(error => {showErrorMsg(error);});

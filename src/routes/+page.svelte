@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import logo from '$lib/assets/logo.png';
+  import descImg from '$lib/assets/desc-img.png';
 
   let authToken = '';
 
@@ -56,7 +57,7 @@
   </div>
   <a href="/signup" class="button get-started">Get Started</a>
   <div class="desc-wrapper">
-    <div class="desc-img"></div>
+    <img class="desc-img" src={descImg} alt="the app">
     <div class="desc-text-wrapper">
       <h3 class="desc-text"><span class="underline">Timetable Management</span> - Create and manage your weekly study schedule with ease.</h3>
       <h3 class="desc-text"><span class="underline">Assignment Tracker</span> - Keep track of assignments and due dates.</h3>
@@ -204,7 +205,7 @@
   }
 
   .desc-wrapper {
-    width: 80%;
+    width: 88%;
     height: 40%;
     background-color: #E65A41;
     margin-top: 3%;
@@ -215,13 +216,11 @@
   }
 
   .desc-img {
-    width: 40%;
+    width: 45%;
     height: 100%;
-    background-image: url('/assets/desc-img.png');
     background-size: cover;
     background-position: center;
     border-radius: 10px 0 0 10px;
-    background-color: grey;
   }
 
   .desc-text-wrapper {
