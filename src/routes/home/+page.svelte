@@ -1,5 +1,5 @@
 <script>
-  import logo from '$lib/assets/logo.png';
+  import logo from '$lib/assets/logo.svg';
   import { browser } from '$app/environment';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
@@ -11,8 +11,8 @@
   let error = '';
   let timeout;
 
-  let username = 'Test';
-  let email = 'raphael221@outlook.de';
+  let username = '';
+  let email = '';
 
   let displayUserCard = false;
 
@@ -22,8 +22,30 @@
     formatCurrentDate();
     getMonthData();
     
+    await getUserData();
     await getProfilePic();
+    await getAssignments();
   });
+
+  async function getUserData() {
+    if (authToken) {
+      const response = await fetch('http://127.0.0.1:3000/api/get-user-data', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 200) {
+        const data = await response.json();
+        username = data.user.name;
+        email = data.user.email;
+      } else {
+        showErrorMsg('Unable to fetch user data.');
+      }
+    }
+  }
 
   async function getProfilePic() {
     if (authToken) {
@@ -239,6 +261,8 @@
 
   function closeEventModalHandler() {
     clickedDate = null;
+    calendar.style.borderTopRightRadius = '6px';
+    calendar.style.borderTopLeftRadius = '6px';
   }
 
   async function getDateEvents(date) {
@@ -326,6 +350,185 @@
       window.location.href = '/login';
     }
   }
+
+  // Assignments
+  let addAssignmentBtn;
+  let expandedAssignment;
+  let assignments = [];
+  let sortType = "subject";
+  let addAssignment = false;
+  let newAssignmentData = {
+    title: "",
+    dueDate: new Date(),
+    subject: "math",
+    priority: "medium",
+    description: ""
+  };
+
+  const subjectColors= {
+    "math": "#4A90E2",
+    "science": "#50E3C2",
+    "german": "#D0021B",
+    "history": "#8B3513",
+    "geography": "#008C8C",
+    "politics": "#9B4F96",
+    "english": "#F8E71C",
+    "pe": "#F8E71C",
+    "art": "#FF33CC",
+    "music": "#FFD700",
+    "computer_sience": "#50B7F5",
+    "religion": "#9B7DFF",
+    "eac": "#636363",
+    "other": "#D3D3D3"
+  };
+
+  $: sortType, updateAssignmentsSorting();
+  $: newAssignmentData.dueDate, formatSelectedDueDate();
+  $: if (addAssignment && addAssignmentBtn) addAssignmentBtn.focus();
+
+  async function getAssignments() {
+    if (authToken) {
+      const response = await fetch('http://127.0.0.1:3000/api/get-assignments', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.status === 200) {
+        const data = await response.json();
+        assignments = data.assignments;
+        updateAssignmentsSorting();
+      } else {
+        showErrorMsg('Unable to fetch assignments.');
+      }
+    }
+  } 
+
+  async function updateAssignmentsSorting() {
+    if (sortType == "subject") {
+      assignments = [...assignments].sort((a, b) => a.subject.localeCompare(b.subject));
+    } else if (sortType == "date") {
+      assignments = [...assignments].sort((a, b) => {
+        const parseDate = (dateString) => {
+          const [day, month, year] = dateString.split('.');
+          return new Date(`${year}-${month}-${day}`);
+        };
+      
+        return parseDate(a.dueDate) - parseDate(b.dueDate);
+      });
+    } else if (sortType == "status") {
+      assignments = [...assignments].sort((a, b) => {
+        const statusOrder = {
+          open: 0,
+          inProgress: 1,
+          done: 2,
+        };
+      
+        return statusOrder[a.status] - statusOrder[b.status];
+      });
+    } else if (sortType == "priority") {
+      assignments = [...assignments].sort((a, b) => {
+        const priorityOrder = {
+          lowest: 0,
+          low: 1,
+          medium: 2,
+          high: 3,
+          highest: 4
+        };
+      
+        return priorityOrder[a.priority] - priorityOrder[b.priority];
+      });
+    }
+  }
+  
+  async function updateAssignment(assignment) {
+    if (authToken) {
+      const response = await fetch('http://127.0.0.1:3000/api/update-assignment', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ assignment })
+      });
+
+      if (response.status === 200) {
+        await getAssignments();
+      } else {
+        showErrorMsg('Unable to update assignment.');
+      }
+    }
+  }
+
+  async function toggleAssignmentDetails(index, e) {
+    if (e.target.closest('.assignment-details-wrapper')) {
+      return;
+    }
+    expandedAssignment = expandedAssignment === index ? null : index;
+  }
+
+  async function deleteAssignmentHandler(index) {
+    if (authToken) {
+      const response = await fetch('http://127.0.0.1:3000/api/delete-assignment', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ assignment: assignments[index] })
+      });
+
+      if (response.status === 200) {
+        await getAssignments();
+      } else {
+        showErrorMsg('Unable to delete assignment.');
+      }
+    }
+  }
+
+  function formatSelectedDueDate() {
+    const dateObj = new Date(newAssignmentData.dueDate);
+    return `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
+  }
+
+  async function addAssignmentHandler(e) {
+    if (event.key == "Escape") {
+      addAssignment = false;
+      newAssignmentData = {
+        title: "",
+        dueDate: new Date(),
+        subject: "math",
+        priority: "medium",
+        description: ""
+      };
+    } else if (e.target == document.querySelector('.addAssignment')) {
+      if (authToken) {
+        const response = await fetch('http://127.0.0.1:3000/api/add-assignment', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newAssignmentData)
+        });
+
+        if (response.status === 200) {
+          await getAssignments();
+          newAssignmentData = {
+            title: "",
+            dueDate: new Date(),
+            subject: "math",
+            priority: "medium",
+            description: ""
+          };
+        } else {
+          showErrorMsg('Unable to add assignment.');
+        }
+      }
+    }
+  }
 </script>
 
 <div class="body">
@@ -340,55 +543,154 @@
        <button class="profile-pic" on:click={displayUserCardHandler}><img src={profilePicture} alt="Your Profile Picture" class="profile-pic-img"/></button>
     </div>
   </div>
-  <div class="recent-notes">
-    <h1 class="section-title">Recent Notes</h1>
-    <div class="notes-list">
-      <div class="notes-list-item">
-        <p class="note-title">Study Tips for Final Exams</p>
-        <p>02.01.2025</p>
+  <div class="dashboard-content">
+    <div class="double-section">
+      <div class="recent-notes">
+        <h1 class="section-title">Recent Notes</h1>
+        <div class="notes-list">
+          <div class="notes-list-item">
+            <p class="note-title">Study Tips for Final Exams</p>
+            <p>02.01.2025</p>
+          </div>
+        </div>
+        <div class="button-wrapper">
+          <button class="button view-all-notes">View All</button>
+          <button class="button add-note"><span class="material-symbols-rounded">note_add</span> <p>New Note</p></button>
+        </div>
+      </div>
+      <div class="calendar" id="calendar">
+        <div class="calendar-header">
+          <h1>{currentDateDisplay}</h1>
+        </div>
+        <div class="month-selector">
+          <select id="month-select" class="month-dropdown" bind:value={selectedMonth}>
+            {#each monthSelectOptions as monthOption}
+              {@const [month, year] = monthOption.split('-')}
+              <option value={monthOption}>{monthLookup[month.toLowerCase()] || 'Invalid month'} {year}</option>
+            {/each}
+          </select>
+          <div class="month-select-manual-wrapper">
+            <button class="month-select-btn month-select-back" on:click={goBackMonth}><span class="material-symbols-rounded">arrow_back_ios</span></button>
+            <button class="month-select-btn month-select-forward" on:click={goForwardMonth}><span class="material-symbols-rounded">arrow_forward_ios</span></button>
+          </div>
+        </div>
+        <div class="calendar-body" id="calendar-body">
+          {#each daysOfWeek as day}
+            <p class="calendar-body-day">{day}</p>
+          {/each}
+    
+          <!-- Empty slots for alignment -->
+          {#each emptyDates as _}
+            <div class="calendar-body-day-empty"></div>
+          {/each}
+    
+          <!-- Dates of the month -->
+          {#each dates as date}
+            <button class="calendar-body-date {date === currentDay && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}" on:click={(event) => handleDateClick(date, event)}>{date}</button>
+          {/each}
+        </div>
       </div>
     </div>
-    <div class="button-wrapper">
-      <button class="button view-all-notes">View All</button>
-      <button class="button add-note"><span class="material-symbols-rounded">note_add</span> <p>New Note</p></button>
-    </div>
-  </div>
-  <div class="calendar" id="calendar">
-    <div class="calendar-header">
-      <h1>{currentDateDisplay}</h1>
-    </div>
-    <div class="month-selector">
-      <select id="month-select" class="month-dropdown" bind:value={selectedMonth}>
-        {#each monthSelectOptions as monthOption}
-          {@const [month, year] = monthOption.split('-')}
-          <option value={monthOption}>{monthLookup[month.toLowerCase()] || 'Invalid month'} {year}</option>
-        {/each}
-      </select>
-      <div class="month-select-manual-wrapper">
-        <button class="month-select-btn month-select-back" on:click={goBackMonth}><span class="material-symbols-rounded">arrow_back_ios</span></button>
-        <button class="month-select-btn month-select-forward" on:click={goForwardMonth}><span class="material-symbols-rounded">arrow_forward_ios</span></button>
+    <div class="assignments">
+      <h1 class="section-title">Assignments</h1>
+      <div class="sort-options-wrapper">
+        <h2>Filter by</h2>
+        <select id="assignment-sort-select" class="assignment-sort-select" bind:value={sortType}>
+          <option value="subject">Subject</option>
+          <option value="status">Status</option>
+          <option value="priority">Priority</option>
+          <option value="date">Date</option>
+        </select>
       </div>
-    </div>
-    <div class="calendar-body" id="calendar-body">
-      {#each daysOfWeek as day}
-        <p class="calendar-body-day">{day}</p>
-      {/each}
-
-      <!-- Empty slots for alignment -->
-      {#each emptyDates as _}
-        <div class="calendar-body-day-empty"></div>
-      {/each}
-
-      <!-- Dates of the month -->
-      {#each dates as date}
-        <button class="calendar-body-date {date === currentDay && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}" on:click={(event) => handleDateClick(date, event)}>{date}</button>
-      {/each}
+      <div class="assignments-wrapper">
+        <div class="assignments-list">
+          {#each assignments as assignment, index (assignment)}
+            <button class="assignment {expandedAssignment == index ? 'expanded' : ''}" style="border: 1px solid {subjectColors[assignment.subject.toLowerCase()]}" on:click={(e) => toggleAssignmentDetails(index, e)}>
+              <div class="assignment-base-info">
+                <p class="assignment-title">{assignment.title}</p>
+                <div class="right-assignment">
+                  <span class="material-symbols-rounded priority {assignment.priority == "lowest" || assignment.priority == "low" ? "low" : assignment.priority == "medium" ? "medium" : assignment.priority == "high" || assignment.priority == "highest" ? "high" : ""}">{assignment.priority == "lowest" ? "keyboard_double_arrow_down" : assignment.priority == "low" ? "keyboard_arrow_down" : assignment.priority == "medium" ? "equal" : assignment.priority == "high" ? "keyboard_arrow_up" : "keyboard_double_arrow_up"}</span>
+                  <h3 class="due-date">{assignment.dueDate}</h3>
+                </div>
+              </div>
+              {#if expandedAssignment == index}
+                <div class="assignment-details-wrapper">
+                  <div class="assignment-details">
+                    <div class="assignment-details-info">
+                      <select id="assignment-status" class="assignment-select" bind:value={assignment.status} on:change={() => updateAssignment(assignment)}>
+                        <option value="open">Open</option>
+                        <option value="inProgress">In Progress</option>
+                        <option value="done">Done</option>
+                      </select>
+                      <select id="assignment-priority" class="assignment-select priority-select" bind:value={assignment.priority} on:change={() => updateAssignment(assignment)}>
+                        <option value="lowest">Lowest</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="highest">Highest</option>
+                      </select>
+                    </div>
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <span class="material-symbols-rounded delete" on:click={(e) => {deleteAssignmentHandler(index)}}>delete</span>
+                  </div>
+                  <textarea id="assignment-description" class="assignment-description" placeholder="Description..." bind:value={assignment.description} on:blur={() => updateAssignment(assignment)}></textarea>
+                </div>
+              {/if}
+            </button>
+          {/each}
+          {#if addAssignment} 
+            <button class="assignment expanded" bind:this={addAssignmentBtn} on:keydown = {(e) => {addAssignmentHandler(e)}}>
+              <div class="assignment-base-info">
+                <input class="assignment-title assignment-input" placeholder="Title..." bind:value={newAssignmentData.title}>
+                <div class="right-assignment">
+                  <input class="due-date assignment-input due-date-input"  type="date" bind:value={newAssignmentData.dueDate}>
+                </div>
+              </div>
+              <div class="assignment-details-wrapper">
+                <div class="assignment-details">
+                  <div class="assignment-details-info">
+                    <select id="assignment-priority" class="assignment-select" bind:value={newAssignmentData.priority}>
+                      <option value="lowest">Lowest</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="highest">Highest</option>
+                    </select>
+                    <select class="assignment-select subject-select" bind:value={newAssignmentData.subject}>
+                      <option value="math">Math</option>
+                      <option value="science">Science</option>
+                      <option value="german">German</option>
+                      <option value="english">English</option>
+                      <option value="history">History</option>
+                      <option value="geography">Geography</option>
+                      <option value="politics">Politics</option>
+                      <option value="pe">PE</option>
+                      <option value="art">Art</option>
+                      <option value="music">Music</option>
+                      <option value="computer_siecne">Computer Sience</option>
+                      <option value="religion">Religion</option>
+                      <option value="eac">EaC</option>
+                      <option value="other">Other</option>
+                    </select> 
+                  </div>
+                  <!-- svelte-ignore a11y_click_events_have_key_events -->
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <span class="material-symbols-rounded addAssignment" style="font-size: 2rem" on:click={(e) => {addAssignmentHandler(e)}}>add</span>
+                </div>
+                <textarea id="assignment-description" class="assignment-description" placeholder="Description..." bind:value={newAssignmentData.description}></textarea>
+              </div>
+            </button>
+          {/if}
+        </div>
+        <button class="add-assignment" on:click={()=>{addAssignment = true}}><span class="material-symbols-rounded">add</span> <h1>Add Assignment</h1></button>
+      </div>
     </div>
   </div>
 </div>
 
 {#if clickedDate}
-  <div class="event-modal" style="bottom: {bottomOfCalendar}px;">
+  <div class="event-modal" style="bottom: calc({bottomOfCalendar}px - 1%);">
     <div class="event-modal-header">
       <div>
         <h1>{clickedDate ? getFullDate(clickedDate) : 'N/A'}</h1>
@@ -442,663 +744,6 @@
 {/if}
 
 <style>
-    .material-symbols-rounded {
-    font-family: 'Material Symbols Rounded';
-    font-weight: bold;
-    font-style: normal;
-    display: inline-block;
-    line-height: 1;
-    text-transform: none;
-    letter-spacing: normal;
-    word-wrap: normal;
-    white-space: nowrap;
-    direction: ltr;
-  }
-
-  * {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-
-  .body {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(0deg, rgba(255,255,255,1) 20%, rgba(201,201,201,1) 100%) !important;
-  }
-
-  .error-wrapper {
-    width: 25%;
-    height: 10%;
-    background-color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    position: absolute;
-    bottom: 5%;
-    right: 3%;
-    border-right: 5px solid #E65A41;
-    box-shadow: 0px 0px 93.7px 2px rgba(0,0,0,0.47);
-    transition: .5s;
-    display: flex;
-  }
-
-  .error {
-    font-size: 2.5rem;
-    padding-left: 2%;
-  }
-
-  .nav-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    width: 100%;
-    height: 12%;
-    border-bottom: 1px solid #C9C9C9;
-  }
-
-  .logo {
-    cursor: default;
-    display: flex;
-    align-items: center;
-  }
-
-  .logo-img {
-    width: 15%;
-    height: auto;
-    margin-right: 1rem;
-  }
-
-  .logo-name {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #E65A41;
-  }
-
-  .button-group-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-right: 1rem;
-    width: 15%;
-    height: 100%;
-  }
-
-  .profile-pic {
-    background: transparent;
-    border: none;
-    outline: none;
-    width: 35%;
-    aspect-ratio: 1;
-    border-radius: 6px;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-  }
-
-  .profile-pic-img {
-    width: 100%;
-    border-radius: 6px;
-  }
-
-  .notes-nav {
-    background: transparent;
-    border: none;
-    outline: none;
-    width: auto;
-    cursor: pointer;
-    font-size: 3rem;
-    font-weight: bold;
-    color: #10222F;
-    background-image: linear-gradient(180deg, transparent 92%, currentColor 0);
-    background-repeat: no-repeat;
-    transition: background-size 0.4s ease;
-    background-size: 0 100%;
-    text-decoration: none;
-  }
-
-  .notes-nav:hover {
-    background-size: 100% 100%;
-  }
-
-  .user-card {
-    position: absolute;
-    top: 12%;
-    right: .8%;
-    background-color: white;
-    width: 20%;
-    height: 50%;
-    box-shadow: 0px 0px 14px 2px rgba(0,0,0,0.47);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .upper-section {
-    background-color: #E65A41;
-    width: 100%;
-    height: 25%;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-  }
-
-  .card-profile-pic {
-    position: absolute;
-    width: 30%;
-    top: 13%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 1px solid #ffffff;
-    border-radius: 100px;
-  }
-
-  .card-user-data {
-    width: 100%;
-    height: 10%;
-    margin-top: 15.5%;
-    text-align: center;
-  }
-
-  .card-user-data h2 {
-    color: #10222F;
-    font-weight: bold;
-    font-size: 2.5rem;
-  }
-
-  .card-user-data p {
-    color: #10222F;
-    font-weight: bold;
-  }
-
-  .card-fabs {
-    width: 60%;
-    height: 10%;
-    margin-top: 6%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-evenly;
-    cursor: pointer;
-  }
-
-  .card-fab {
-    background-color: #10222F;
-    color: #fff;
-    border: none;
-    outline: none;
-    width: 20%;
-    aspect-ratio: 1;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .card-fab span {
-    font-size: 2rem;
-    font-weight: 600;
-  }
-
-  .card-btns {
-    width: 70%;
-    height: 25%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 5%;
-  }
-
-  .card-btn {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    height: 40%;
-    margin-top: 10%;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    cursor: pointer;
-    color: #10222F;
-  }
-
-  .card-btn span {
-    font-size: 3rem;
-  }
-
-  .card-btn p {
-    text-align: start;
-    margin-left: 5%;
-    width: 100%;
-  }
-
-  .dark-light-toggle {
-    margin-top: 0;
-  }
-
-  .section-title {
-    width: 100%;
-    height: 10%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #E65A41;
-    font-weight: bold;
-    font-size: 3rem;
-    margin-top: 3%;
-  }
-
-  .recent-notes {
-    width: 35%;
-    height: 40%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    top: 2%;
-    left: 1%;
-    box-shadow: 0 0 14px 2px rgba(0,0,0,0.47);
-    border-radius: 6px;
-    background-color: #fff;
-  }
-
-  .notes-list {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 90%;
-    height: 60%;
-    overflow-y: auto;
-    margin-top: 2%;
-  }
-
-  .notes-list::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .notes-list::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 8px;
-  }
-
-  .notes-list::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-
-  .notes-list::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-
-  .notes-list-item {
-    width: 100%;
-    height: 25%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 3px solid #C2C2C2;
-    cursor: pointer;
-  }
-
-  .notes-list-item:hover {
-    background-color: #eeeeee;
-  }
-
-  .notes-list-item p {
-    color: #000;
-    font-weight: bold;
-    font-size: 1.5rem;
-  }
-
-  .note-title {
-    width: 50%;
-  }
-
-  .button-wrapper {
-    display: flex;
-    align-items: center;
-    width: 70%;
-    height: 20%;
-    margin-right: auto;
-    margin-left: 3.7%;
-    justify-content: space-evenly;
-  }
-
-  .view-all-notes {
-    width: 40%;
-    height: 80%;
-    border: none;
-    outline: none;
-    background-color: #E65A41;
-    border-radius: 6px;
-    color: #fff;
-    font-size: 2rem;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  .add-note {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 55%;
-    height: 80%;
-    border: none;
-    outline: none;
-    background-color: #E65A41;
-    border-radius: 6px;
-    color: #fff;
-    font-size: 2rem;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  .add-note span {
-    font-size: 3rem;
-    margin-left: 2%;
-  }
-
-  .add-note p {
-    width: 100%;
-    text-align: center;
-  }
-
-  .button-wrapper button:hover {
-    background-color: #C94F3F;
-  }
-
-  .calendar {
-    width: 35%;
-    height: 42.5%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: absolute;
-    bottom: 2%;
-    left: 1%;
-    box-shadow: 0 0 14px 2px rgba(0,0,0,0.47);
-    border-radius: 6px;
-    background-color: #fff;
-  }
-
-  .calendar-header {
-    font-size: 1.2rem;
-    margin-top: 2%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: start;
-    width: 98%;
-    height: 10%;
-    margin-left: 5%;
-    margin-top: 3%;
-  }
-
-  .calendar-header h1 {
-    font-weight: 300;
-  }
-
-  .month-selector {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 94%;
-    height: 10%;
-  }
-
-  .month-dropdown {
-    background-color: transparent;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-
-  .month-select-manual-wrapper {
-    width: 10%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between
-  }
-
-  .month-select-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    border: none;
-    outline: none;
-    cursor: pointer;
-  }
-
-  .calendar-body {
-    display: grid;
-    align-items: center;
-    justify-items: center;
-    grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-    width: 95%;
-    height: 70%;
-    margin-top: 1%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    box-sizing: border-box;
-  }
-
-  .calendar-body::-webkit-scrollbar {
-    width: 0px;
-  }
-
-  .calendar-body::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .calendar-body::-webkit-scrollbar-thumb {
-    background: transparent;
-  }
-
-  .calendar-body::-webkit-scrollbar-thumb:hover {
-    background: transparent;
-  }
-
-  .calendar-body-day,
-  .calendar-body-date ,
-  .calendar-body-day-empty {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 50%;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-size: 1.1rem;
-  }
-
-  .calendar-body-date::selection {
-    outline: 1px solid #10222F;
-  }
-
-  .calendar-body-date:not(.current-date):hover {
-      background-color: #eeeeee;
-  }
-
-  .calendar-body-day {
-      text-align: center;
-      font-size: 1rem;
-  }
-
-  .current-date {
-    background-color: #E65A41;
-    color: #fff;
-  }
-
-  .selected-date {
-    border: 1px solid #E65A41;
-  }
-
-  .event-modal {
-    position: absolute;
-    left: 1%;
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-radius: 6px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-    border-bottom: 2px solid #d9d9d9;
-    box-shadow: 0 -6px 5.9px 2px rgba(0,0,0,0.38);
-    width: 35%;
-    height: 30%;
-  }
-
-  .event-modal-header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    height: 20%;
-    margin-top: 2%;
-  }
-
-  .event-modal-header div {
-    flex: 1;
-    text-align: center;
-    margin-left: 10%;
-  }
-
-  .event-modal-header h1 {
-    margin: 0;
-  }
-
-  .close-btn {
-    margin-left: auto;
-    margin-right: 4%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    color: #000;
-    border-radius: 100px;
-    width: 7%;
-    aspect-ratio: 1;
-  }
-
-  .close-btn span {
-    font-size: 2.5rem;
-  }
-
-  .close-btn:hover {
-    background-color: #eeeeee;
-  }
-
-  .event-list {
-    margin-top: 2%;
-    width: 70%;
-    height: 60%;
-    max-height: 80%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 1%;
-  }
-
-  .event-list > * {
-    flex-shrink: 0;
-  }
-
-  .event-list::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .event-list::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 8px;
-  }
-
-  .event-list::-webkit-scrollbar-thumb {
-    background: transparent;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-
-  .event-list::-webkit-scrollbar-thumb:hover {
-    background: transparent;
-  }
-
-  .event {
-    width: 100%;
-    height: 25%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #d9d9d9;
-    border-top: none;
-    background-color: transparent;
-    outline: none;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1.5rem;
-  }
-
-  .top-event {
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-    border-top: 1px solid #d9d9d9 !important;
-  }
-
-  .bottom-event {
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-  }
-
-  .event span {
-    transition: all 0.3s ease;
-  }
-
-  .event:hover {
-    background-color: #eeeeee;
-  }
-
-  .event:hover:not(.add-event) span {
-    color: #D11F22;
-    font-size: 2.5rem;
-  }
-
-  .event-input {
-    width: 100%;
-    height: 100%;
-    outline: none;
-    background-color: transparent;
-    font-weight: bold;
-    font-size: 1.5rem;
-    text-align: center;
-  }
-
-  .new-event-input {
-    text-align: center;
-    width: 99.6%;
-  }
+  @import "$lib/style/global.css";
+  @import "$lib/style/home.css";
 </style>

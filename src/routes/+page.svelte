@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import logo from '$lib/assets/logo.png';
-  import descImg from '$lib/assets/desc-img.png';
+  import logo from '$lib/assets/logo.svg';
+  import descImg from '$lib/assets/Landingpage/desc-img.png';
 
   let authToken = '';
 
@@ -109,7 +109,7 @@
   }
 
   .logo {
-    cursor: default;
+    cursor: pointer !important;
     display: flex;
     align-items: center;
   }
