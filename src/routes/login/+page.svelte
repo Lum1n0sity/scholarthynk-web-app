@@ -1,6 +1,6 @@
 <script>
   import { browser } from '$app/environment';
-  import logo from '$lib/assets/logo.png';
+  import logo from '$lib/assets/logo.svg';
   let isRememberChecked = false;
   let isPasswordVisible = false;
 
@@ -102,57 +102,13 @@
 {/if}
 
 <style>
-  .material-symbols-rounded {
-    font-family: 'Material Symbols Rounded';
-    font-weight: normal;
-    font-style: normal;
-    display: inline-block;
-    line-height: 1;
-    text-transform: none;
-    letter-spacing: normal;
-    word-wrap: normal;
-    white-space: nowrap;
-    direction: ltr;
-  }
-
-  * {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-  }
+  @import "$lib/style/global.css";
+  @import "$lib/style/login.css";
 
   .body {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(0deg, rgba(255,255,255,1) 20%, rgba(201,201,201,1) 100%) !important;
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-
-  .error-wrapper {
-    width: 25%;
-    height: 10%;
-    background-color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    position: absolute;
-    bottom: 5%;
-    right: 3%;
-    border-right: 5px solid #E65A41;
-    box-shadow: 0px 0px 93.7px 2px rgba(0,0,0,0.47);
-    transition: .5s;
-    display: flex;
-  }
-
-  .error {
-    font-size: 2.5rem;
-    padding-left: 2%;
   }
 
   .nav-bar {
