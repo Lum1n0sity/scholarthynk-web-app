@@ -509,8 +509,17 @@
         {:else if displayedView === 'editor'}
             <div class="note-editor">
                 <div class="editor">
+<script>
+  import DOMPurify from 'dompurify';
+  // ... other script code
+</script>
+
                     <input class="open-note-title" placeholder="Note title..." bind:value={noteTitle} on:input={handleNoteInput}>
-                    <div id="note" class="note" contenteditable="true" bind:this={noteEditor} on:input={handleNoteInput}></div>
+                    <div id="note" class="note" contenteditable="true" bind:this={noteEditor} 
+                         on:input={(e) => {
+                           e.target.innerHTML = DOMPurify.sanitize(e.target.innerHTML);
+                           handleNoteInput();
+                         }}></div>
                 </div>
                 <div class="note-options">
                     <div class="formatting-btns">
