@@ -555,7 +555,7 @@
                 </div>
                 <div class="button-wrapper">
                     <button class="button view-all-notes">View All</button>
-                    <button class="button add-note"><span class="material-symbols-rounded">note_add</span> <p>New Note</p></button>
+                    <button class="button add-note"><span class="material-symbols-rounded">add_notes</span> <p>New Note</p></button>
                 </div>
             </div>
             <div class="calendar" id="calendar">
