@@ -133,6 +133,33 @@
     margin-right: 2%;
 }
 
+.refresh-fv-btn {
+    font-size: 2rem;
+    background: #E65A41;
+    cursor: pointer;
+    transition: .5s;
+    outline: none;
+    border: none;
+    border-radius: 6px;
+    padding: 1%;
+    margin: 2%;
+    margin-left: auto;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.refresh-fv-btn:hover {
+    background: #C94F3F;
+}
+
+.refresh-fv-btn span {
+    font-size: 2.5rem;
+    margin-right: 2%;
+}
+
 .fv-new-folder {
     justify-content: flex-start;
     cursor: default;
@@ -188,7 +215,7 @@
     width: 100%;
     border: none;
     border-bottom: 1px solid #C2C2C2;
-    height: 20%;
+    height: -webkit-fill-available;
     margin: 0;
     outline: none;
     font-size: 1.5rem;

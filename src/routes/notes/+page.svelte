@@ -98,6 +98,8 @@
     let newItemName = "";
     let selectedItem = "";
 
+    $: displayedView, getFVItems(path[path.length - 1]);
+
     async function getFVItems(folder) {
         if (authToken) {
             const response = await fetch('http://127.0.0.1:3000/api/get-fv-items', {
@@ -138,7 +140,6 @@
 
     async function deleteFolder() {
         if (authToken) {
-            path.push(selectedItemName);
             const response = await fetch('http://127.0.0.1:3000/api/delete-fv-items', {
                 method: 'POST',
                 headers: {
@@ -149,11 +150,9 @@
             });
 
             if (response.status === 200) {
-                const index = path.indexOf(selectedItemName);
-                path.splice(index, 1);
                 await getFVItems(path[path.length - 1]);
             } else {
-                showErrorMsg('Unable to delete folder.');
+                showErrorMsg('Unable to delete item.');
             }
         }
     }
@@ -205,8 +204,6 @@
 
     async function renameFVItem() {
         if (authToken) {
-            path.push(selectedItem);
-
             if (newItemName === "") {
                 showErrorMsg("New name cannot be empty!");
                 closeModal("renameItem");
@@ -254,6 +251,8 @@
 
     function openFVContextMenu(event) {
         event.preventDefault();
+
+        contextInitIsFolder = false;
 
         if (event.target.classList.contains("folder")) contextInitIsFolder = true;
 
@@ -478,13 +477,13 @@
                         </button>
                     {/each}
                     {#each files as file, index}
-                        <button class="fv-item" on:contextmenu={openFVContextMenu} on:click={openNote(file.name, false)}>
+                        <button class="fv-item parent" on:contextmenu={openFVContextMenu} on:click={openNote(file.name, false)}>
                             <div class="fv-item-left"><span class="material-symbols-rounded fv-icon">article</span>
                                 {#if isRenamingItem && selectedItemName === file.name}
                                     <input type="text" placeholder="File name..." class="new-folder-input"
                                            bind:value={newItemName} on:blur={renameFVItem()}>
                                 {:else}
-                                    <p class="folder folder-name">{file.name}</p>
+                                    <p class="folder-name">{file.name}</p>
                                 {/if}
                             </div>
                             <p class="fv-item-right">{file.lastEdited}</p>
@@ -504,6 +503,7 @@
                     <button class="new-btn" on:click={() => {isCreatingFolder = true}}><span
                             class="material-symbols-rounded">create_new_folder</span> New Folder
                     </button>
+                    <button class="refresh-fv-btn" on:click={() => {getFVItems(path[path.length - 1])}}><span class="material-symbols-rounded">refresh</span></button>
                 </div>
             </div>
         {:else if displayedView === 'editor'}
