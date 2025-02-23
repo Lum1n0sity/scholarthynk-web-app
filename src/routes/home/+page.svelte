@@ -1,9 +1,9 @@
 <script>
     import logo from '$lib/assets/logo.svg';
-    import { browser } from '$app/environment';
-    import { onMount } from 'svelte';
-    import { get } from 'svelte/store';
-    import { text } from '@sveltejs/kit';
+    import {browser} from '$app/environment';
+    import {onMount} from 'svelte';
+    import {get} from 'svelte/store';
+    import {text} from '@sveltejs/kit';
 
     let profilePicture = '';
     const authToken = browser ? localStorage.getItem('authToken') : null;
@@ -133,8 +133,8 @@
         const totalDays = lastDayOfMonth.getDate();
 
         // Calculate empty slots before the first day of the month
-        emptyDates = Array.from({ length: startDay }, () => null); // Empty slots
-        dates = Array.from({ length: totalDays }, (_, i) => i + 1); // Dates of the month
+        emptyDates = Array.from({length: startDay}, () => null); // Empty slots
+        dates = Array.from({length: totalDays}, (_, i) => i + 1); // Dates of the month
     }
 
     function goBackMonth() {
@@ -164,7 +164,7 @@
             newMonthIndex -= 1;
         }
 
-        selectedMonth = `${new Date(newYearIndex, newMonthIndex).toLocaleString('default', { month: 'short' }).toLowerCase()}-${newYearIndex}`;
+        selectedMonth = `${new Date(newYearIndex, newMonthIndex).toLocaleString('default', {month: 'short'}).toLowerCase()}-${newYearIndex}`;
     }
 
     function goForwardMonth() {
@@ -179,12 +179,12 @@
             monthIndex += 1;
         }
 
-        selectedMonth = `${new Date(yearIndex, monthIndex).toLocaleString('default', { month: 'short' }).toLowerCase()}-${yearIndex}`;
+        selectedMonth = `${new Date(yearIndex, monthIndex).toLocaleString('default', {month: 'short'}).toLowerCase()}-${yearIndex}`;
     }
 
     function formatCurrentDate() {
         const today = new Date();
-        const options = { weekday: 'short', month: 'short', day: '2-digit' };
+        const options = {weekday: 'short', month: 'short', day: '2-digit'};
         currentDateDisplay = today.toLocaleDateString('en-US', options);
     }
 
@@ -197,7 +197,7 @@
             // Loop through each month of the current year
             for (let month = 0; month < 12; month++) {
                 // Format the month and year as "Jan-2025"
-                const monthName = new Date(year, month).toLocaleString('default', { month: 'short' }).toLowerCase();
+                const monthName = new Date(year, month).toLocaleString('default', {month: 'short'}).toLowerCase();
                 months.push(`${monthName}-${year}`);
             }
         }
@@ -273,7 +273,7 @@
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ date: getFullDate(date) })
+                body: JSON.stringify({date: getFullDate(date)})
             });
 
             if (response.status === 200) {
@@ -310,7 +310,7 @@
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name: newEventName, date: getFullDate(clickedDate) })
+                    body: JSON.stringify({name: newEventName, date: getFullDate(clickedDate)})
                 });
 
                 if (response.status == 200) {
@@ -323,7 +323,7 @@
             } else if (!authToken) {
                 window.location.href = '/login';
             }
-        } else if(event.key == "Escape") {
+        } else if (event.key == "Escape") {
             eventIsEditing = false;
             newEventName = '';
         }
@@ -337,7 +337,7 @@
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name: event.name, date: getFullDate(clickedDate) })
+                body: JSON.stringify({name: event.name, date: getFullDate(clickedDate)})
             });
 
             if (response.status === 200) {
@@ -365,7 +365,7 @@
         description: ""
     };
 
-    const subjectColors= {
+    const subjectColors = {
         "math": "#4A90E2",
         "science": "#50E3C2",
         "german": "#D0021B",
@@ -451,7 +451,7 @@
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ assignment })
+                body: JSON.stringify({assignment})
             });
 
             if (response.status === 200) {
@@ -477,7 +477,7 @@
                     'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ assignment: assignments[index] })
+                body: JSON.stringify({assignment: assignments[index]})
             });
 
             if (response.status === 200) {
@@ -540,7 +540,9 @@
         <div class="button-group-nav">
             <a href="/notes" class="nav">Notes</a>
             <!-- svelte-ignore a11y_img_redundant_alt -->
-            <button class="profile-pic" on:click={displayUserCardHandler}><img src={profilePicture} alt="Your Profile Picture" class="profile-pic-img"/></button>
+            <button class="profile-pic" on:click={displayUserCardHandler}><img src={profilePicture}
+                                                                               alt="Your Profile Picture"
+                                                                               class="profile-pic-img"/></button>
         </div>
     </div>
     <div class="dashboard-content">
@@ -555,7 +557,8 @@
                 </div>
                 <div class="button-wrapper">
                     <button class="button view-all-notes">View All</button>
-                    <button class="button add-note"><span class="material-symbols-rounded">add_notes</span> <p>New Note</p></button>
+                    <button class="button add-note"><span class="material-symbols-rounded">add_notes</span>
+                        <p>New Note</p></button>
                 </div>
             </div>
             <div class="calendar" id="calendar">
@@ -570,8 +573,10 @@
                         {/each}
                     </select>
                     <div class="month-select-manual-wrapper">
-                        <button class="month-select-btn month-select-back" on:click={goBackMonth}><span class="material-symbols-rounded">arrow_back_ios</span></button>
-                        <button class="month-select-btn month-select-forward" on:click={goForwardMonth}><span class="material-symbols-rounded">arrow_forward_ios</span></button>
+                        <button class="month-select-btn month-select-back" on:click={goBackMonth}><span
+                                class="material-symbols-rounded">arrow_back_ios</span></button>
+                        <button class="month-select-btn month-select-forward" on:click={goForwardMonth}><span
+                                class="material-symbols-rounded">arrow_forward_ios</span></button>
                     </div>
                 </div>
                 <div class="calendar-body" id="calendar-body">
@@ -586,7 +591,8 @@
 
                     <!-- Dates of the month -->
                     {#each dates as date}
-                        <button class="calendar-body-date {date === currentDay && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}" on:click={(event) => handleDateClick(date, event)}>{date}</button>
+                        <button class="calendar-body-date {date === currentDay && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}"
+                                on:click={(event) => handleDateClick(date, event)}>{date}</button>
                     {/each}
                 </div>
             </div>
@@ -605,7 +611,9 @@
             <div class="assignments-wrapper">
                 <div class="assignments-list">
                     {#each assignments as assignment, index (assignment)}
-                        <button class="assignment {expandedAssignment == index ? 'expanded' : ''}" style="border: 1px solid {subjectColors[assignment.subject.toLowerCase()]}" on:click={(e) => toggleAssignmentDetails(index, e)}>
+                        <button class="assignment {expandedAssignment == index ? 'expanded' : ''}"
+                                style="border: 1px solid {subjectColors[assignment.subject.toLowerCase()]}"
+                                on:click={(e) => toggleAssignmentDetails(index, e)}>
                             <div class="assignment-base-info">
                                 <p class="assignment-title">{assignment.title}</p>
                                 <div class="right-assignment">
@@ -617,12 +625,16 @@
                                 <div class="assignment-details-wrapper">
                                     <div class="assignment-details">
                                         <div class="assignment-details-info">
-                                            <select id="assignment-status" class="assignment-select" bind:value={assignment.status} on:change={() => updateAssignment(assignment)}>
+                                            <select id="assignment-status" class="assignment-select"
+                                                    bind:value={assignment.status}
+                                                    on:change={() => updateAssignment(assignment)}>
                                                 <option value="open">Open</option>
                                                 <option value="inProgress">In Progress</option>
                                                 <option value="done">Done</option>
                                             </select>
-                                            <select id="assignment-priority" class="assignment-select priority-select" bind:value={assignment.priority} on:change={() => updateAssignment(assignment)}>
+                                            <select id="assignment-priority" class="assignment-select priority-select"
+                                                    bind:value={assignment.priority}
+                                                    on:change={() => updateAssignment(assignment)}>
                                                 <option value="lowest">Lowest</option>
                                                 <option value="low">Low</option>
                                                 <option value="medium">Medium</option>
@@ -632,32 +644,40 @@
                                         </div>
                                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                                         <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                        <span class="material-symbols-rounded delete" on:click={(e) => {deleteAssignmentHandler(index)}}>delete</span>
+                                        <span class="material-symbols-rounded delete"
+                                              on:click={(e) => {deleteAssignmentHandler(index)}}>delete</span>
                                     </div>
-                                    <textarea id="assignment-description" class="assignment-description" placeholder="Description..." bind:value={assignment.description} on:blur={() => updateAssignment(assignment)}></textarea>
+                                    <textarea id="assignment-description" class="assignment-description"
+                                              placeholder="Description..." bind:value={assignment.description}
+                                              on:blur={() => updateAssignment(assignment)}></textarea>
                                 </div>
                             {/if}
                         </button>
                     {/each}
                     {#if addAssignment}
-                        <button class="assignment expanded" bind:this={addAssignmentBtn} on:keydown = {(e) => {addAssignmentHandler(e)}}>
+                        <button class="assignment expanded" bind:this={addAssignmentBtn}
+                                on:keydown={(e) => {addAssignmentHandler(e)}}>
                             <div class="assignment-base-info">
-                                <input class="assignment-title assignment-input" placeholder="Title..." bind:value={newAssignmentData.title}>
+                                <input class="assignment-title assignment-input" placeholder="Title..."
+                                       bind:value={newAssignmentData.title}>
                                 <div class="right-assignment">
-                                    <input class="due-date assignment-input due-date-input"  type="date" bind:value={newAssignmentData.dueDate}>
+                                    <input class="due-date assignment-input due-date-input" type="date"
+                                           bind:value={newAssignmentData.dueDate}>
                                 </div>
                             </div>
                             <div class="assignment-details-wrapper">
                                 <div class="assignment-details">
                                     <div class="assignment-details-info">
-                                        <select id="assignment-priority" class="assignment-select" bind:value={newAssignmentData.priority}>
+                                        <select id="assignment-priority" class="assignment-select"
+                                                bind:value={newAssignmentData.priority}>
                                             <option value="lowest">Lowest</option>
                                             <option value="low">Low</option>
                                             <option value="medium">Medium</option>
                                             <option value="high">High</option>
                                             <option value="highest">Highest</option>
                                         </select>
-                                        <select class="assignment-select subject-select" bind:value={newAssignmentData.subject}>
+                                        <select class="assignment-select subject-select"
+                                                bind:value={newAssignmentData.subject}>
                                             <option value="math">Math</option>
                                             <option value="science">Science</option>
                                             <option value="german">German</option>
@@ -676,14 +696,19 @@
                                     </div>
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                                     <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                    <span class="material-symbols-rounded addAssignment" style="font-size: 2rem" on:click={(e) => {addAssignmentHandler(e)}}>add</span>
+                                    <span class="material-symbols-rounded addAssignment" style="font-size: 2rem"
+                                          on:click={(e) => {addAssignmentHandler(e)}}>add</span>
                                 </div>
-                                <textarea id="assignment-description" class="assignment-description" placeholder="Description..." bind:value={newAssignmentData.description}></textarea>
+                                <textarea id="assignment-description" class="assignment-description"
+                                          placeholder="Description..."
+                                          bind:value={newAssignmentData.description}></textarea>
                             </div>
                         </button>
                     {/if}
                 </div>
-                <button class="add-assignment" on:click={()=>{addAssignment = true}}><span class="material-symbols-rounded">add</span> <h1>Add Assignment</h1></button>
+                <button class="add-assignment" on:click={()=>{addAssignment = true}}><span
+                        class="material-symbols-rounded">add</span>
+                    <h1>Add Assignment</h1></button>
             </div>
         </div>
     </div>
@@ -695,17 +720,23 @@
             <div>
                 <h1>{clickedDate ? getFullDate(clickedDate) : 'N/A'}</h1>
             </div>
-            <button class="close-btn" on:click={closeEventModalHandler}><span class="material-symbols-rounded">close</span></button>
+            <button class="close-btn" on:click={closeEventModalHandler}><span
+                    class="material-symbols-rounded">close</span></button>
         </div>
         <div class="event-list" bind:this={eventList}>
             {#each events as event}
                 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
-                <button class="event top-event" on:mouseover={(e) =>  handleEventHover(e, event, true)} on:mouseout={(e) => handleEventHover(e, event, false)} on:click={() => deleteEvent(event)}><span>{event.name}</span></button>
+                <button class="event top-event" on:mouseover={(e) =>  handleEventHover(e, event, true)}
+                        on:mouseout={(e) => handleEventHover(e, event, false)} on:click={() => deleteEvent(event)}>
+                    <span>{event.name}</span></button>
             {/each}
             {#if eventIsEditing}
-                <input class="event new-event-input {eventList?.childElementCount === 1 ? 'top-event' : ''}" type="text" bind:value={newEventName} on:keydown={() => addEvent(event)} placeholder="Enter event name...">
+                <input class="event new-event-input {eventList?.childElementCount === 1 ? 'top-event' : ''}" type="text"
+                       bind:value={newEventName} on:keydown={() => addEvent(event)} placeholder="Enter event name...">
             {/if}
-            <button class="event add-event bottom-event {eventList?.childElementCount === 1 ? 'top-event' : ''}" on:click={handleNewEventClick}><span class="material-symbols-rounded">add</span> <p>New Event</p></button>
+            <button class="event add-event bottom-event {eventList?.childElementCount === 1 ? 'top-event' : ''}"
+                    on:click={handleNewEventClick}><span class="material-symbols-rounded">add</span>
+                <p>New Event</p></button>
         </div>
     </div>
 {/if}
@@ -731,8 +762,10 @@
             </button>
         </div>
         <div class="card-btns">
-            <button class="card-btn dark-light-toggle"><span class="material-symbols-rounded">contrast</span> <p>Dark/Light Mode</p></button>
-            <button class="card-btn switch-account"><span class="material-symbols-rounded">switch_account</span> <p>Switch Account</p></button>
+            <button class="card-btn dark-light-toggle"><span class="material-symbols-rounded">contrast</span>
+                <p>Dark/Light Mode</p></button>
+            <button class="card-btn switch-account"><span class="material-symbols-rounded">switch_account</span>
+                <p>Switch Account</p></button>
         </div>
     </div>
 {/if}

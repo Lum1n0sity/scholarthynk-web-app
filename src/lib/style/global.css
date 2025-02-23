@@ -185,7 +185,6 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-evenly;
-  cursor: pointer;
 }
 
 .card-fab {
@@ -199,11 +198,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .card-fab span {
   font-size: 2rem;
-  font-weight: 600;
 }
 
 .card-btns {
