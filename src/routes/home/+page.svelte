@@ -494,7 +494,7 @@
     }
 
     async function addAssignmentHandler(e) {
-        if (event.key == "Escape") {
+        if (e.key == "Escape") {
             addAssignment = false;
             newAssignmentData = {
                 title: "",
@@ -516,6 +516,7 @@
 
                 if (response.status === 200) {
                     await getAssignments();
+                    addAssignment = false;
                     newAssignmentData = {
                         title: "",
                         dueDate: new Date(),
