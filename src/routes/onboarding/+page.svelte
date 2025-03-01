@@ -217,7 +217,7 @@
         showErrorMsg(error);
       }
     } else {
-       await skipProfilePic();
+      await skipProfilePic();
     }
   }
 
