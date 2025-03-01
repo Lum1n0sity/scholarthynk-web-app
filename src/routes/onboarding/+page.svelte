@@ -143,7 +143,7 @@
   function dataURLToBlob(dataURL) {
     const byteString = atob(dataURL.split(',')[1]);
     const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    
+
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
 
@@ -160,7 +160,7 @@
 
       const dataURL = canvas.toDataURL('image/png');
       const blob = dataURLToBlob(dataURL);
-      
+
       const formData = new FormData();
       formData.append('profilePic', blob);
       formData.append('userId', userId);
@@ -216,6 +216,8 @@
         console.error(error);
         showErrorMsg(error);
       }
+    } else {
+      await skipProfilePic();
     }
   }
 
@@ -253,7 +255,7 @@
             const bgColor = generateBgColor();
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             ctx.font = 'bold 80px Arial';
             ctx.fillStyle = '#FFFFFF';
             ctx.textAlign = 'center';
@@ -261,7 +263,7 @@
 
             const initials = username.split(' ').map(name => name[0]).join('').toUpperCase();
             ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
-            
+
             imgWrapper.innerHTML = '';
             imgWrapper.appendChild(canvas);
           } else {
