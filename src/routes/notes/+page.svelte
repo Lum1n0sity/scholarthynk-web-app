@@ -1,13 +1,24 @@
 <script>
     import logo from '$lib/assets/logo.svg';
-    import { browser } from '$app/environment';
-    import { onMount } from 'svelte';
+    import {onMount} from 'svelte';
+    // import DOMPurify from 'dompurify';
+    import {getAuthToken} from "$lib/js/auth.js";
+    import {getUserData, getProfilePic, displayUserCardHandler} from "$lib/js/user.js";
+    import {
+        getFVItems,
+        deleteFolder,
+        createNote,
+        createFolder,
+        renameFVItem
+    } from "$lib/js/notes/fileViewer.js";
+    import {
+        updateNote,
+        getNote,
+    } from "$lib/js/notes/noteEditor.js";
+
+    const authToken = getAuthToken();
 
     let profilePicture = '';
-    const authToken = browser ? localStorage.getItem('authToken') : null;
-
-    let error = '';
-    let timeout;
 
     let username = '';
     let email = '';
@@ -15,57 +26,19 @@
     let displayUserCard = false;
 
     onMount(async () => {
-        await openFolder("root");
-        await getUserData();
-        await getProfilePic();
+        let userData = await getUserData(authToken);
+        username = userData.username;
+        email = userData.email;
+
+        profilePicture = await getProfilePic(authToken);
+
+        await refreshFV("root");
         document.addEventListener("click", closeFVContextMenu);
     });
 
-    async function getUserData() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-user-data', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 200) {
-                const data = await response.json();
-                username = data.user.name;
-                email = data.user.email;
-            } else {
-                showErrorMsg('Unable to fetch user data.');
-            }
-        }
-    }
-
-    async function getProfilePic() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-profile-pic', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 200) {
-                const imageBlob = await response.blob();
-                profilePicture = URL.createObjectURL(imageBlob);
-
-            } else {
-                showErrorMsg('Unable to fetch your profile picture.');
-            }
-        } else {
-            window.location.href = '/login';
-        }
-    }
-
-    function displayUserCardHandler() {
-        displayUserCard = displayUserCard === false ? true : false;
-    }
+    // Error handling
+    let error = '';
+    let timeout;
 
     function showErrorMsg(err) {
         if (err) {
@@ -78,6 +51,7 @@
     }
 
     // Notes
+
     let displayedView = 'files';
 
     let fileViewerContextMenu;
@@ -98,157 +72,170 @@
     let newItemName = "";
     let selectedItem = "";
 
-    $: displayedView, getFVItems(path[path.length - 1]);
+    let originalTitle = "";
+    let noteTitle = "";
+    let noteContent = "";
 
-    async function getFVItems(folder) {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-fv-items', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({folder: folder, path: path})
-            });
+    let noteEditor;
+    let timeoutNoteEditor;
 
-            if (response.status === 200) {
-                const data = await response.json();
-                folders = data.folders;
-                files = data.files;
-            } else {
-                showErrorMsg('Unable to fetch file viewer items.');
-            }
-        }
-    }
+    let wordCount;
+    let characterCount;
 
-    async function openFolder(folder) {
+    $: displayedView, refreshFV(path[path.length - 1]);
+
+    /**
+     * Opens a folder in the file viewer.
+     *
+     * If the folder is not "root", the current path is updated to include the
+     * folder. The contents of the folder are then fetched using `getFVItems` and
+     * the `folders` and `files` variables are updated with the new contents.
+     *
+     * @param {string} folder - The name of the folder to open.
+     * @returns {Promise<void>} - A promise that resolves when the folder has been
+     * opened.
+     */
+    async function openFolderHelper(folder) {
         if (folder !== "root") {
             path = [...path, folder];
         }
-        await getFVItems(folder);
+
+        let fvItems = await getFVItems(folder, path, authToken);
+        folders = fvItems.folders;
+        files = fvItems.files;
     }
 
-    async function openNote(note, isNewNote) {
-        displayedView = 'editor';
-        await getNote(note, isNewNote);
+    /**
+     * Opens a note in the editor view.
+     *
+     * This function sets the displayed view to "editor" and retrieves the note
+     * data using `getNoteHelper`. If the note is specified as a new note, it
+     * initializes with default content.
+     *
+     * @param {string} note - The name or identifier of the note to open.
+     * @param {boolean} isNewNote - Indicates whether the note is new or existing.
+     * @returns {Promise<void>} - A promise that resolves when the note is opened.
+     */
+    async function openNoteHelper(note, isNewNote) {
+        displayedView = "editor";
+        await getNoteHelper(note, isNewNote);
     }
 
-    async function navigateTo(index) {
+    /**
+     * Navigate to a specific folder in the file viewer.
+     *
+     * This function modifies the current path to navigate to the folder at the specified index,
+     * and then updates the `folders` and `files` variables with the contents of that folder.
+     *
+     * @param {number} index - The index in the path array to navigate to.
+     * @param {string} folder - The name of the folder to navigate to.
+     * @returns {Promise<void>} - A promise that resolves when the navigation is complete.
+     */
+    async function navigateTo(index, folder) {
         path = path.slice(0, index + 1);
-        await getFVItems(path[index]);
+
+        let fvItems = await getFVItems(folder, path, authToken);
+        folders = fvItems.folders;
+        files = fvItems.files;
     }
 
-    async function deleteFolder() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/delete-fv-items', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({folder: selectedItemName, path: path})
-            });
-
-            if (response.status === 200) {
-                await getFVItems(path[path.length - 1]);
-            } else {
-                showErrorMsg('Unable to delete item.');
-            }
+    /**
+     * Delete the selected folder in the file viewer.
+     *
+     * This function is an event handler for the button to delete a folder in the
+     * file viewer. It calls `deleteFolder` to delete the folder, and if the folder
+     * was deleted successfully, it calls `refreshFV` to refresh the file viewer
+     * with the folder removed.
+     */
+    async function deleteFolderHelper() {
+        let success = await deleteFolder(selectedItemName, path, authToken);
+        if (success) {
+            await refreshFV(path[path.length - 1]);
         }
     }
 
-    async function createFolder() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/create-folder', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({folder: path, name: newFolderName})
-            });
-
-            if (response.status === 200) {
-                cancelNewFolder();
-                await getFVItems(path[path.length - 1]);
-            } else if (response.status === 400) {
-                showErrorMsg('Folder name cannot be empty.');
-            } else if (response.status === 409) {
-                showErrorMsg('Folder already exists.');
-            } else {
-                showErrorMsg('Unable to create folder.');
-            }
+    /**
+     * Create a new folder in the file viewer.
+     *
+     * This function is an event handler for the button to create a new folder in
+     * the file viewer. It prevents the default action of the button click event,
+     * and then calls `createFolder` to create a new folder. After `createFolder`
+     * has completed, it calls `cancelNewFolder` to cancel the new folder input
+     * field, and then calls `refreshFV` to refresh the file viewer with the newly
+     * created folder.
+     *
+     * @returns {Promise<void>} a promise that resolves when the creation of the
+     * folder has completed
+     */
+    async function createFolderHelper() {
+        let success = await createFolder(newFolderName, path, authToken);
+        if (success) {
+            cancelNewFolder();
+            await refreshFV(path[path.length - 1]);
         }
     }
 
-    async function createNote() {
-        if (authToken) {
-            displayedView = "editor";
+    /**
+     * Refresh the file viewer by fetching the items in the given folder.
+     *
+     * This function will call `getFVItems` to fetch the items in the given folder,
+     * and then update the `folders` and `files` variables with the newly fetched
+     * items.
+     *
+     * @param {string} folder the name of the folder to fetch items from
+     * @returns {Promise<void>} a promise that resolves when the file viewer has
+     * been refreshed
+     */
+    async function refreshFV(folder) {
+        let fvItems = await getFVItems(folder, path, authToken);
+        folders = fvItems.folders;
+        files = fvItems.files;
+    }
 
-            const response = await fetch('http://127.0.0.1:3000/api/new-note', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({path: path})
-            });
-
-            if (response.status === 200) {
-                await openNote("Untitled", true);
-            } else {
-                showErrorMsg('Unable to create note.');
-            }
+    /**
+     * Create a new note in the file viewer.
+     *
+     * This function is an event handler for the button to create a new note in the
+     * file viewer. It prevents the default action of the button click event, and
+     * then calls `createNote` to create a new note. After `createNote` has
+     * completed, it opens the newly created note with `openNoteHelper`.
+     *
+     * @returns {Promise<void>} a promise that resolves when the note has been
+     * created and opened
+     */
+    async function createNoteHelper() {
+        let success = await createNote(path, authToken);
+        if (success) {
+            await openNoteHelper("Untitled", true);
         }
     }
 
-    async function renameFVItem() {
-        if (authToken) {
-            if (newItemName === "") {
-                showErrorMsg("New name cannot be empty!");
-                closeModal("renameItem");
-                return;
-            }
-
-            if (newItemName === selectedItem) {
-                showErrorMsg("New name cannot be the same as the old name!");
-                closeModal("renameItem");
-                return;
-            }
-
-            const response = await fetch('http://127.0.0.1:3000/api/rename-fv-item', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({path: path, oldName: selectedItem, newName: newItemName})
-            });
-
-            if (response.status === 200) {
-                isRenamingItem = false;
-                newItemName = "";
-
-                const index = path.indexOf(selectedItem);
-                if (index !== -1) {
-                    path.splice(index, 1);
-                }
-
-                closeModal("renameItem");
-                await getFVItems(path[path.length - 1]);
-            } else if (response.status === 400) {
-                showErrorMsg(await response.json().error);
-            } else {
-                showErrorMsg('Unable to rename item.');
-            }
+    /**
+     * Rename a file or folder in the file viewer.
+     *
+     * This function is an event handler for the button to rename a file or folder
+     * in the file viewer context menu. It prevents the default action of the button
+     * click event, and then calls `renameFVItem` to rename the file or folder. After
+     * `renameFVItem` has completed, it closes the rename item modal, and if the
+     * rename was successful, it refreshes the file viewer.
+     */
+    async function renameFVItemHelper() {
+        let success = await renameFVItem(newItemName, selectedItem, path, authToken);
+        closeModal("renameItem");
+        if (success) {
+            await refreshFV(path[path.length - 1]);
         }
     }
 
-    function cancelNewFolder() {
-        isCreatingFolder = false;
-        newFolderName = "";
-    }
-
+    /**
+     * Open the file viewer context menu.
+     *
+     * This function is an event handler for the right-click event on the file
+     * viewer. It prevents the default action of the right-click event, and then
+     * shows the file viewer context menu at the position of the right-click.
+     *
+     * @param {MouseEvent} event the right-click event that triggered this function
+     */
     function openFVContextMenu(event) {
         event.preventDefault();
 
@@ -264,12 +251,27 @@
         showFVContext = true;
     }
 
+    /**
+     * Closes the file viewer context menu.
+     *
+     * This resets the state used to handle the context menu, including the menu's
+     * visibility, whether the item that was right-clicked is a folder, and the name
+     * of the item that was right-clicked.
+     */
     function closeFVContextMenu() {
         showFVContext = false;
         contextInitIsFolder = false;
         selectedItemName = "";
     }
 
+    /**
+     * Closes the given modal.
+     *
+     * If the modal is `"renameItem"`, it also resets the rename item state.
+     *
+     * @param {string} modal - The modal to close.
+     * @returns {void}
+     */
     function closeModal(modal) {
         if (modal === "renameItem") {
             isRenamingItem = false;
@@ -277,73 +279,86 @@
         }
     }
 
-    // editor
-    let originalTitle = "";
-    let noteTitle = "";
-    let noteContent = "";
+    /**
+     * Cancels the creation of a new folder.
+     *
+     * Sets `isCreatingFolder` to `false` and resets `newFolderName` to an empty string.
+     *
+     * @returns {void}
+     */
+    function cancelNewFolder() {
+        isCreatingFolder = false;
+        newFolderName = "";
+    }
 
-    let noteEditor;
-    let timeoutNoteEditor;
-
-    let wordCount;
-    let characterCount;
-
+    /**
+     * Handles input events in the note editor by setting a 2-second debounce timer.
+     * If the timer completes, it updates the note with the current content of the
+     * note editor.
+     *
+     * @returns {Promise<void>}
+     */
     async function handleNoteInput() {
         noteContent = noteEditor.innerHTML;
 
         clearTimeout(timeoutNoteEditor);
 
         timeoutNoteEditor = setTimeout(async () => {
-            await updateNote();
+            await updateNoteHelper();
         }, 2000);
     }
 
-    async function updateNote() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/update-note', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({title: noteTitle, oldTitle: originalTitle, content: noteContent, path: path})
-            });
+    /**
+     * Retrieves and displays a note in the editor view.
+     *
+     * This function fetches the note data using `getNote` and updates the
+     * editor with the note's title and content. It also sets the word and
+     * character count statistics for the note. The editor view is activated
+     * to display the note content.
+     *
+     * @param {string} note - The name or identifier of the note to retrieve.
+     * @param {boolean} isNewNote - Indicates whether the note is new or existing.
+     * @returns {Promise<void>} - A promise that resolves when the note data is retrieved and displayed.
+     */
+    async function getNoteHelper(note, isNewNote) {
+        let noteData = await getNote(authToken, path, note, isNewNote);
 
-            if (response.status !== 200) {
-                showErrorMsg('Unable to update note.');
-            }
+        originalTitle = noteData.noteTitle;
+        noteTitle = noteData.noteTitle;
+        noteContent = noteData.noteContent;
 
-            calculateNoteStatistics();
+        wordCount = noteData.statistics.wordCount;
+        characterCount = noteData.statistics.characterCount;
+
+        noteEditor.innerHTML = noteContent;
+
+        displayedView = "editor";
+    }
+
+    /**
+     * Updates the currently open note with the new content in the note editor.
+     * If the update was successful, it also reloads the note content.
+     */
+    async function updateNoteHelper() {
+        let success = await updateNote(authToken, noteTitle, originalTitle, noteContent, path);
+        if (success) {
+            await getNoteHelper(noteTitle, false);
         }
     }
 
-    async function getNote(title, isNewNote) {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-note', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({title: title, path: path})
-            });
-
-            if (response.status === 200) {
-                const data = await response.json();
-
-                originalTitle = data.note.name;
-
-                noteTitle = data.note.name;
-                noteContent = data.note.fileContent;
-                noteEditor.innerHTML = data.note.fileContent;
-
-                calculateNoteStatistics();
-            } else {
-                if (!isNewNote) showErrorMsg('Unable to load note.');
-            }
-        }
-    }
-
+    /**
+     * Toggles a specific style property on the selected text within the note editor.
+     *
+     * This function applies or removes a specified style to the current text selection
+     * by wrapping it in a <span> element with the given style. If the selected text
+     * already has the specified style, it will be removed. If the selection is empty,
+     * or if the selection is not within the note editor, the function does nothing.
+     * After modifying the selection, any adjacent spans with the same style are merged,
+     * and the note input handler is triggered to update the note content.
+     *
+     * @param {string} styleProperty - The CSS style property to toggle (e.g., "font-weight").
+     * @param {string} styleValue - The value of the style property to apply or remove (e.g., "bold").
+     */
     function toggleStyle(styleProperty, styleValue) {
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
@@ -385,6 +400,13 @@
         handleNoteInput();
     }
 
+    /**
+     * Merge adjacent spans with the same style.
+     *
+     * Given a span element, merge its content with any adjacent spans that have the same style.
+     *
+     * @param {HTMLElement} span The span to merge adjacent spans with.
+     */
     function mergeAdjacentSpans(span) {
         if (!span || span.tagName !== "SPAN") return;
 
@@ -405,13 +427,14 @@
         }
     }
 
-    function calculateNoteStatistics() {
-        const content = noteEditor.textContent;
-
-        wordCount = content.trim().split(/\s+/).length;
-        characterCount = content.length;
-    }
-
+    /**
+     * Resets formatting within the selected text range in the note editor.
+     *
+     * This function removes any <span> elements within the selection by replacing
+     * them with their text content, effectively clearing any styling applied.
+     * The selection is then cleared and the note editor is focused.
+     * Finally, the note input handler is triggered to update the note content.
+     */
     function resetFormatting() {
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
@@ -449,10 +472,10 @@
         </div>
         <div class="button-group-nav" style="width: 19.3%">
             <a href="/home" class="nav">Dashboard</a>
-            <!-- svelte-ignore a11y_img_redundant_alt -->
-            <button class="profile-pic" on:click={displayUserCardHandler}><img src={profilePicture}
-                                                                               alt="Your Profile Picture"
-                                                                               class="profile-pic-img"/></button>
+            <button class="profile-pic" on:click={() => {displayUserCard = displayUserCardHandler(displayUserCard)}}>
+                <img src={profilePicture}
+                     alt="Your Profile Picture"
+                     class="profile-pic-img"/></button>
         </div>
     </div>
     <div class="page-content">
@@ -460,7 +483,7 @@
             <div class="file-viewer">
                 <div class="breadcrumbs">
                     {#each path as folder, index}
-                        <span class="breadcrumb" on:click={() => {navigateTo(index)}}>{folder}</span>
+                        <span class="breadcrumb" on:click={() => {navigateTo(index, folder)}}>{folder}</span>
                         {#if index < path.length - 1}
                             <span class="separator">/</span>
                         {/if}
@@ -468,7 +491,8 @@
                 </div>
                 <div class="files">
                     {#each folders as folder, index}
-                        <button class="fv-item folder parent" on:contextmenu={openFVContextMenu} on:click={openFolder(folder.name)}>
+                        <button class="fv-item folder parent" on:contextmenu={openFVContextMenu}
+                                on:click={openFolderHelper(folder.name)}>
                             <div class="fv-item-left folder">
                                 <span class="material-symbols-rounded fv-icon folder">folder</span>
                                 <p class="folder folder-name">{folder.name}</p>
@@ -477,11 +501,12 @@
                         </button>
                     {/each}
                     {#each files as file, index}
-                        <button class="fv-item parent" on:contextmenu={openFVContextMenu} on:click={openNote(file.name, false)}>
+                        <button class="fv-item parent" on:contextmenu={openFVContextMenu}
+                                on:click={openNoteHelper(file.name, false)}>
                             <div class="fv-item-left"><span class="material-symbols-rounded fv-icon">article</span>
                                 {#if isRenamingItem && selectedItemName === file.name}
                                     <input type="text" placeholder="File name..." class="new-folder-input"
-                                           bind:value={newItemName} on:blur={renameFVItem()}>
+                                           bind:value={newItemName} on:blur={renameFVItemHelper}>
                                 {:else}
                                     <p class="folder-name">{file.name}</p>
                                 {/if}
@@ -493,47 +518,50 @@
                         <div class="fv-item fv-new-folder">
                             <span class="material-symbols-rounded fv-icon">folder</span>
                             <input type="text" placeholder="Folder name..." class="new-folder-input"
-                                   bind:value={newFolderName} on:blur={createFolder}>
-                            <button class="close-btn" on:click={cancelNewFolder}><span class="material-symbols-rounded">close</span></button>
+                                   bind:value={newFolderName} on:blur={createFolderHelper}>
+                            <button class="close-btn" on:click={cancelNewFolder}><span class="material-symbols-rounded">close</span>
+                            </button>
                         </div>
                     {/if}
                 </div>
                 <div class="fv-btns">
-                    <button class="new-btn" on:click={createNote}><span class="material-symbols-rounded">add_notes</span> New Note</button>
+                    <button class="new-btn" on:click={createNoteHelper}><span
+                            class="material-symbols-rounded">add_notes</span> New Note
+                    </button>
                     <button class="new-btn" on:click={() => {isCreatingFolder = true}}><span
                             class="material-symbols-rounded">create_new_folder</span> New Folder
                     </button>
-                    <button class="refresh-fv-btn" on:click={() => {getFVItems(path[path.length - 1])}}><span class="material-symbols-rounded">refresh</span></button>
+                    <button class="refresh-fv-btn" on:click={() => {refreshFV(path[path.length - 1])}}><span
+                            class="material-symbols-rounded">refresh</span></button>
                 </div>
             </div>
         {:else if displayedView === 'editor'}
             <div class="note-editor">
                 <div class="editor">
-<script>
-  import DOMPurify from 'dompurify';
-  // ... other script code
-</script>
-
-                    <input class="open-note-title" placeholder="Note title..." bind:value={noteTitle} on:input={handleNoteInput}>
-                    <div id="note" class="note" contenteditable="true" bind:this={noteEditor} 
-                         on:input={(e) => {
-                           e.target.innerHTML = DOMPurify.sanitize(e.target.innerHTML);
-                           handleNoteInput();
-                         }}></div>
+                    <input class="open-note-title" placeholder="Note title..." bind:value={noteTitle}
+                           on:input={handleNoteInput}>
+                    <div id="note" class="note" contenteditable="true" bind:this={noteEditor}
+                         on:input={(e) => {handleNoteInput();}}>
+                    </div>
                 </div>
                 <div class="note-options">
                     <div class="formatting-btns">
-                        <button class="formatting-btn" on:click={() => {toggleStyle("font-weight", "bold")}}><span class="material-symbols-rounded">format_bold</span></button>
-                        <button class="formatting-btn" on:click={() =>{toggleStyle("text-decoration", "underline")}}><span class="material-symbols-rounded">format_underlined</span></button>
-                        <button class="formatting-btn" on:click={() =>{toggleStyle("font-style", "italic")}}><span class="material-symbols-rounded">format_italic</span></button>
-                        <button class="formatting-btn" on:click={resetFormatting}><span class="material-symbols-rounded">format_color_reset</span></button>
+                        <button class="formatting-btn" on:click={() => {toggleStyle("font-weight", "bold")}}><span
+                                class="material-symbols-rounded">format_bold</span></button>
+                        <button class="formatting-btn" on:click={() =>{toggleStyle("text-decoration", "underline")}}>
+                            <span class="material-symbols-rounded">format_underlined</span></button>
+                        <button class="formatting-btn" on:click={() =>{toggleStyle("font-style", "italic")}}><span
+                                class="material-symbols-rounded">format_italic</span></button>
+                        <button class="formatting-btn" on:click={resetFormatting}><span
+                                class="material-symbols-rounded">format_color_reset</span></button>
                     </div>
                     <div class="note-statistics">
                         <p class="note-statistic">Words: {wordCount}</p>
                         <p class="note-statistic">Characters: {characterCount}</p>
                         <p class="note-statistic">Owner: N/A</p>
                         <button class="share-btn"><span class="material-symbols-rounded">share</span> Share</button>
-                        <button class="back-fv" on:click={() => {displayedView = 'files'}}><span class="material-symbols-rounded">folder</span></button>
+                        <button class="back-fv" on:click={() => {displayedView = 'files'}}><span
+                                class="material-symbols-rounded">folder</span></button>
                     </div>
                 </div>
             </div>
@@ -546,10 +574,11 @@
         <div class="modal rename-modal">
             <div class="modal-header rename-modal-header">
                 <h3 class="modal-title">Rename "{selectedItem}"</h3>
-                <button class="modal-close" on:click={() => {closeModal("renameItem")}}><span class="material-symbols-rounded">close</span></button>
+                <button class="modal-close" on:click={() => {closeModal("renameItem")}}><span
+                        class="material-symbols-rounded">close</span></button>
             </div>
             <input type="text" placeholder="File name..." class="rename-input" bind:value={newItemName}>
-            <button class="button update-item" on:click={renameFVItem()}>Update</button>
+            <button class="button update-item" on:click={renameFVItemHelper}>Update</button>
         </div>
     </div>
 {/if}
@@ -558,12 +587,16 @@
     <div class="fv-context-menu" bind:this={fileViewerContextMenu}
          style="top: {menuY}px; left: {menuX}px; height: {contextInitIsFolder ? '30%' : '20%'}">
         {#if contextInitIsFolder}
-            <button class="fv-context-menu-item" on:click={createNote()}>New Note</button>
-            <button class="fv-context-menu-item" on:click={() => {openFolder(selectedItemName); isCreatingFolder = true}}>New Folder</button>
+            <button class="fv-context-menu-item" on:click={createNoteHelper}>New Note</button>
+            <button class="fv-context-menu-item"
+                    on:click={() => {openFolderHelper(selectedItemName); isCreatingFolder = true}}>New Folder
+            </button>
         {/if}
         <button class="fv-context-menu-item">Download</button>
-        <button class="fv-context-menu-item" on:click={() =>{isRenamingItem = true; selectedItem = selectedItemName}}>Rename</button>
-        <button class="fv-context-menu-item" on:click={deleteFolder}>Delete</button>
+        <button class="fv-context-menu-item" on:click={() =>{isRenamingItem = true; selectedItem = selectedItemName}}>
+            Rename
+        </button>
+        <button class="fv-context-menu-item" on:click={deleteFolderHelper}>Delete</button>
         <button class="fv-context-menu-item">Share</button>
     </div>
 {/if}

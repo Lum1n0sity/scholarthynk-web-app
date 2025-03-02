@@ -1,11 +1,21 @@
 <script>
   import { browser } from '$app/environment';
   import logo from '$lib/assets/logo.svg';
-  let isRememberChecked = false;
-  let isPasswordVisible = false;
+  import {hashPassword} from "$lib/js/user.js";
 
+  // Error handling
   let error = '';
   let timeout;
+
+  function showErrorMsg(err) {
+    error = err
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      error = '';
+    }, 5000);
+  }
+
+  let isPasswordVisible = false;
 
   let email;
   let password;
@@ -20,7 +30,6 @@
     const userData = JSON.stringify({
       email: email,
       password: hashedPassword,
-      remember: isRememberChecked,
     });
 
     fetch('http://localhost:3000/api/login', {
@@ -49,23 +58,6 @@
       })
       .catch(error => {showErrorMsg(error);});
   }
-
-  async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-
-  function showErrorMsg(err) {
-    error = err
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      error = '';
-    }, 5000);
-  }
 </script>
 
 <div class="body">
@@ -87,11 +79,6 @@
       <button class="show-hide-btn" on:click={showHidePassword}><span class="material-symbols-rounded show-hide-icon">{isPasswordVisible ? 'visibility_off' : 'visibility'}</span></button>
     </div>
   </div>
-  <label>
-    <input type="checkbox" class="material-symbols-rounded" bind:checked={isRememberChecked}>
-    <span class="custom-checkbox"></span>
-    Remember Me
-  </label>
   <button class="button login" on:click={handleSubmit}>Login</button>
 </div>
 
@@ -104,193 +91,4 @@
 <style>
   @import "$lib/style/global.css";
   @import "$lib/style/login.css";
-
-  .body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .nav-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    width: 95%;
-    height: 12%;
-    margin-top: 2.5%;
-    border-radius: 10px;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-  }
-
-  .logo-img {
-    width: 15%;
-    height: auto;
-    margin-right: 1rem;
-  }
-
-  .logo-name {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #E65A41;
-  }
-
-  .page-title {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #E65A41;
-    margin-right: 2%;
-  }
-
-  .top-wrapper {
-    margin-top: 5% !important;
-  }
-
-  .input-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-top: 3%;
-    width: 40%;
-    height: 12%;
-  }
-
-  .input {
-    background-color: #C2C2C2;
-    border: none;
-    outline: none;
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-    margin-top: 1%;
-    font-size: 3rem;
-    padding: 2%;
-  }
-
-  .input-name {
-    font-size: 2.7rem;
-    font-weight: bold;
-  }
-
-  .input-wrapper-pw {
-    height: 15%;
-    width: 41.7%;
-    margin-left: 1.6%;
-  }
-
-  .password-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: 100%;
-    height: 100%;
-    margin-top: .5%;
-  }
-
-  .input-password {
-    width: 90%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    padding-left: 2%;
-  }
-
-  .show-hide-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;    
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-    border: none;
-    outline: none;
-    background-color: #C2C2C2;
-    margin-left: auto;
-    width: 13%;
-    height: 100%;
-    border-left: 1px solid #000;
-    cursor: pointer;
-  }
-
-  .show-hide-icon {
-    font-size: 4rem;
-    font-weight: bold;
-  }
-
-  label {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: 40%;
-    height: 10%;
-    margin-top: 1%;
-  }
-
-  input[type="checkbox"] {
-    display: none;
-  }
-
-  /* Custom checkbox container */
-  .custom-checkbox {
-    width: 7%;
-    height: 54%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    position: relative;
-    cursor: pointer;
-    background-color: #C2C2C2;
-    margin-right: 1%;
-  }
-
-  /* Add a checkmark when checked */
-  input[type="checkbox"]:checked + .custom-checkbox::after {
-    content: "";
-    display: inline-block;
-    font-family: 'Material Symbols Rounded';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 3rem;
-    color: white;
-    content: 'check'
-  }
-
-  /* Background color for checked state */
-  input[type="checkbox"]:checked + .custom-checkbox {
-    background-color: #E65A41;
-  }
-
-  label {
-    font-size: 2.7rem;
-    font-weight: bold;
-  }
-
-  .button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 15%;
-    height: 10%;
-    background-color: #E65A41;
-    border: none;
-    outline: none;
-    border-radius: 10px;
-    margin-top: 2%;
-    cursor: pointer;
-  }
-
-  .login {
-    font-size: 2.7rem;
-    font-weight: bold;
-    color: white;
-    margin-top: 4% !important;
-  }
 </style>
