@@ -74,9 +74,8 @@ export async function handleDateClick(date, event, calendar, clickedDate, authTo
         const rect = calendar.getBoundingClientRect();
 
         let events = await getDateEvents(date, authToken, selectedMonth);
-        // events !== [] ? updateTopEventClass() : null;
 
-        return {clickedDate: date, events: events, bottomOfCalendar: rect.height + window.innerHeight * 0.02, action: "open"};
+        return {clickedDate: date, events: events, bottomOfCalendar: rect.height + window.innerHeight * 0.02, width: rect.width, action: "open"};
     }
 }
 
