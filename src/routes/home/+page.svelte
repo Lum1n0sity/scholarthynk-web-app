@@ -574,6 +574,9 @@
                 <span class="material-symbols-rounded">settings</span>
             </button>
             <button class="card-fab">
+                <span class="material-symbols-rounded">notifications</span>
+            </button>
+            <button class="card-fab">
                 <span class="material-symbols-rounded">logout</span>
             </button>
         </div>
@@ -586,11 +589,26 @@
     </div>
 {/if}
 
-{#if error}
-    <div class="error-wrapper">
-        <h1 class="error">{error}</h1>
+<div class="notifications">
+    <div class="notifications-header">
+        <h2 class="notifications-title">Notifications</h2>
+        <button class="notifications-close"><span class="material-symbols-rounded">remove</span></button>
     </div>
-{/if}
+    <button class="notifications-clear"><span class="material-symbols-rounded">delete</span> Clear</button>
+    <div class="notifications-list">
+        <div class="notifications-error">
+            <h3 class="notification-error-title notifications-content" style="grid-area: error-title;">Error while loading your assignments:</h3>
+            <p class="notifications-error-message notifications-content" style="grid-area: error-msg;">More Detailed error message returned from the API!</p>
+            <p class="notifications-error-timestamp notifications-content" style="grid-area: error-timestamp;">02.03.2025</p>
+            <span class="material-symbols-rounded error-icon" style="grid-area: error-icon;">error</span>
+        </div>
+    </div>
+</div>
+
+<!--<button class="error-popup">-->
+<!--    <h1 class="error-message">Error while loading assignments</h1>-->
+<!--    <span class="material-symbols-rounded">error</span>-->
+<!--</button>-->
 
 <style>
     @import "$lib/style/global.css";
