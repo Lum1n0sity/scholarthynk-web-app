@@ -1,15 +1,37 @@
 <script>
     import logo from '$lib/assets/logo.svg';
-    import {browser} from '$app/environment';
     import {onMount} from 'svelte';
-    import {get} from 'svelte/store';
-    import {text} from '@sveltejs/kit';
+    import {writable} from "svelte/store";
+    import {getAuthToken} from "$lib/js/auth.js";
+    import {getUserData, getProfilePic, displayUserCardHandler} from "$lib/js/user.js";
+    import {
+        newAssignmentData,
+        addAssignment,
+        toggleAssignmentDetails,
+        getAssignments,
+        formatSelectedDueDate,
+        updateAssignment,
+        updateAssignmentsSorting,
+        deleteAssignment
+    } from '$lib/js/home/assignments.js';
+    import {
+        getCurrentDate,
+        getMonthData,
+        getFormattedCurrentDate,
+        goBackMonth,
+        goForwardMonth,
+        getMonthsForNextYears,
+        handleDateClick,
+        getFullDate,
+        handleNewEventClick,
+        addEvent,
+        getDateEvents,
+        deleteEvent
+    } from "$lib/js/home/calendar.js";
+
+    const authToken = getAuthToken();
 
     let profilePicture = '';
-    const authToken = browser ? localStorage.getItem('authToken') : null;
-
-    let error = '';
-    let timeout;
 
     let username = '';
     let email = '';
@@ -19,60 +41,22 @@
     onMount(async () => {
         selectedMonth = monthSelectOptions[0];
 
-        formatCurrentDate();
-        getMonthData();
+        currentDateDisplay = getFormattedCurrentDate();
+        let monthData = getMonthData(selectedMonth);
+        dates = monthData.dates;
+        emptyDates = monthData.emptyDates;
 
-        await getUserData();
-        await getProfilePic();
-        await getAssignments();
+        let userData = await getUserData(authToken);
+        username = userData.username;
+        email = userData.email;
+
+        profilePicture = await getProfilePic(authToken);
+        assignments.set(await getAssignments(authToken, sortType));
     });
 
-    async function getUserData() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-user-data', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 200) {
-                const data = await response.json();
-                username = data.user.name;
-                email = data.user.email;
-            } else {
-                showErrorMsg('Unable to fetch user data.');
-            }
-        }
-    }
-
-    async function getProfilePic() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-profile-pic', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 200) {
-                const imageBlob = await response.blob();
-                profilePicture = URL.createObjectURL(imageBlob);
-
-            } else {
-                showErrorMsg('Unable to fetch your profile picture.');
-            }
-        } else {
-            window.location.href = '/login';
-        }
-    }
-
-    function displayUserCardHandler() {
-        displayUserCard = displayUserCard == false ? true : false;
-    }
-
+    // Error handling
+    let timeout;
+    let error = '';
     function showErrorMsg(err) {
         if (err) {
             error = err;
@@ -83,18 +67,45 @@
         }
     }
 
-    // Calendar
-    let selectedMonth = '';
+    // Runes
+    $: sortType, assignments.set(updateAssignmentsSorting($assignments, sortType));
+    $: newAssignmentData.dueDate, formatSelectedDueDate();
+    $: if (addAssignment && addAssignmentBtn) addAssignmentBtn.focus();
+    $: if (!isAddingAssignment) getAssignmentsHelper(authToken);
 
-    $: selectedMonth, getMonthData();
+    $: selectedMonth, updateCalendarHelper();
+
+    let assignments = writable([]);
+
+    let expandedAssignment = null;
+
+    let addAssignmentBtn;
+    let isAddingAssignment = false;
+
+    let sortType = "subject";
+    const subjectColors = {
+        "math": "#4A90E2",
+        "science": "#50E3C2",
+        "german": "#D0021B",
+        "history": "#8B3513",
+        "geography": "#008C8C",
+        "politics": "#9B4F96",
+        "english": "#F8E71C",
+        "pe": "#F8E71C",
+        "art": "#FF33CC",
+        "music": "#FFD700",
+        "computer_sience": "#50B7F5",
+        "religion": "#9B7DFF",
+        "eac": "#636363",
+        "other": "#D3D3D3"
+    };
+
+    let calendar;
+    let selectedMonth = '';
 
     let dates = [];
     let emptyDates = [];
     let currentDateDisplay = '';
-    const currentDate = new Date();
-    const currentDay = currentDate.getDate();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
 
     const daysOfWeek = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     const monthSelectOptions = getMonthsForNextYears();
@@ -120,102 +131,124 @@
     let eventIsEditing = false;
     let newEventName;
 
-    function getMonthData() {
-        const [month, year] = selectedMonth.split('-');
-        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-        const firstDayOfMonth = new Date(year, monthIndex, 1);
-        let startDay = firstDayOfMonth.getDay(); // Sunday = 0, Monday = 1, ...
-
-        // Adjust startDay for Monday as the first day of the week
-        startDay = (startDay === 0) ? 6 : startDay - 1;
-
-        const lastDayOfMonth = new Date(year, monthIndex + 1, 0);
-        const totalDays = lastDayOfMonth.getDate();
-
-        // Calculate empty slots before the first day of the month
-        emptyDates = Array.from({length: startDay}, () => null); // Empty slots
-        dates = Array.from({length: totalDays}, (_, i) => i + 1); // Dates of the month
+    /**
+     * Handles the expansion of an assignment's details on click.
+     *
+     * @param {number} index The index of the assignment in the assignments array.
+     * @param {Event} e The event that triggered this function.
+     *
+     * @returns {void}
+     */
+    function handleExpandClick(index, e) {
+        e.stopPropagation();
+        expandedAssignment = toggleAssignmentDetails(expandedAssignment, index, e);
     }
 
-    function goBackMonth() {
-        if (!selectedMonth) {
-            console.error("Invalid selectedMonth: ", selectedMonth);
-            return;
+    /**
+     * Updates an assignment in the database, then fetches the assignments list
+     * and updates the assignments store if the update was successful.
+     *
+     * @param {string} authToken The authentication token to use for the request.
+     * @param {assignment} assignment The assignment to update.
+     *
+     * @returns {Promise<void>}
+     */
+    async function updateAssignmentHelper(authToken, assignment) {
+        const success = await updateAssignment(authToken, assignment);
+        if (success) {
+            await getAssignmentsHelper(authToken);
         }
+    }
 
-        const [month, year] = selectedMonth.split('-');
-        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-        const yearIndex = parseInt(year);
+    /**
+     * Fetches the assignments list from the server and updates the assignments
+     * store with the new data.
+     *
+     * @param {string} authToken The authentication token to use for the request.
+     *
+     * @returns {Promise<void>}
+     */
+    async function getAssignmentsHelper(authToken) {
+        const newAssignmnents = await getAssignments(authToken);
+        assignments.set(newAssignmnents);
+    }
 
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth();
-
-        if (yearIndex === currentYear && monthIndex === currentMonth) {
-            return;
+    /**
+     * Deletes an assignment from the database and updates the assignments list if the
+     * deletion was successful.
+     *
+     * @param {string} authToken The authentication token to use for the request.
+     * @param {number} index The index of the assignment to delete in the assignments
+     *     array.
+     * @param {assignment[]} assignments The array of assignments from which to delete
+     *     the assignment.
+     *
+     * @returns {Promise<void>}
+     */
+    async function deleteAssignmentHelper(authToken, index, assignments) {
+        const success = await deleteAssignment(authToken, index, assignments);
+        if (success) {
+            await getAssignmentsHelper(authToken);
         }
+    }
 
-        let newMonthIndex = monthIndex;
-        let newYearIndex = yearIndex;
+    /**
+     * Updates the `dates` and `emptyDates` variables by calling `getMonthData` with
+     * the current `selectedMonth`.
+     *
+     * @returns {void}
+     */
+    function updateCalendarHelper() {
+        let monthData = getMonthData(selectedMonth);
+        dates = monthData.dates;
+        emptyDates = monthData.emptyDates;
+    }
 
-        if (monthIndex === 0) {
-            newMonthIndex = 11;
-            newYearIndex -= 1;
+    /**
+     * Handles a click event on the calendar.
+     *
+     * If the clicked date is not the same as the previously clicked date, the
+     * function calls `handleDateClick` and, if the response indicates that the
+     * date selection should be opened, it updates the `bottomOfCalendar`, `events`,
+     * and `clickedDate` variables. Additionally, it updates the CSS style of the
+     * calendar by setting the `border-top-right-radius` and `border-top-left-radius`
+     * properties to '0px'.
+     *
+     * If the clicked date is the same as the previously clicked date, the function
+     * sets the `events` and `clickedDate` variables to null and resets the CSS
+     * style of the calendar by setting the `border-top-right-radius` and
+     * `border-top-left-radius` properties to '6px'.
+     *
+     * @param {number} date - The day of the month.
+     * @param {Event} event - The click event object.
+     *
+     * @returns {Promise<void>}
+     */
+    async function dateClickHelper(date, event) {
+        const dateClick = await handleDateClick(date, clickedDate, calendar, event, authToken, selectedMonth);
+        if (dateClick.action === "open") {
+            bottomOfCalendar = dateClick.bottomOfCalendar;
+            events = dateClick.events;
+            clickedDate = dateClick.clickedDate;
+
+            events !== [] ? updateTopEventClass() : null;
+
+            calendar.style.borderTopRightRadius = '0px';
+            calendar.style.borderTopLeftRadius = '0px';
         } else {
-            newMonthIndex -= 1;
+            events = null;
+            clickedDate = null;
+            calendar.style.borderTopRightRadius = '6px';
+            calendar.style.borderTopLeftRadius = '6px';
         }
-
-        selectedMonth = `${new Date(newYearIndex, newMonthIndex).toLocaleString('default', {month: 'short'}).toLowerCase()}-${newYearIndex}`;
     }
 
-    function goForwardMonth() {
-        const [month, year] = selectedMonth.split('-');
-        let monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-        let yearIndex = parseInt(year);
-
-        if (monthIndex === 11) {
-            monthIndex = 0;
-            yearIndex += 1;
-        } else {
-            monthIndex += 1;
-        }
-
-        selectedMonth = `${new Date(yearIndex, monthIndex).toLocaleString('default', {month: 'short'}).toLowerCase()}-${yearIndex}`;
-    }
-
-    function formatCurrentDate() {
-        const today = new Date();
-        const options = {weekday: 'short', month: 'short', day: '2-digit'};
-        currentDateDisplay = today.toLocaleDateString('en-US', options);
-    }
-
-    function getMonthsForNextYears() {
-        const currentYear = new Date().getFullYear();
-        const months = [];
-
-        // Loop through each year
-        for (let year = currentYear; year < currentYear + 10; year++) {
-            // Loop through each month of the current year
-            for (let month = 0; month < 12; month++) {
-                // Format the month and year as "Jan-2025"
-                const monthName = new Date(year, month).toLocaleString('default', {month: 'short'}).toLowerCase();
-                months.push(`${monthName}-${year}`);
-            }
-        }
-
-        return months;
-    }
-
-    function getFullDate(date) {
-        const [month, year] = selectedMonth.split('-');
-        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-        const currentYear = new Date().getFullYear();
-
-        const formattedDay = date < 10 ? `0${date}` : date;
-        const formattedMonth = monthIndex < 10 ? `0${monthIndex + 1}` : monthIndex + 1;
-
-        return `${formattedDay}.${formattedMonth}.${currentYear}`;
-    }
-
+    /**
+     * Updates the `top-event` class of the elements in the `eventList` so that
+     * only the first element has the class.
+     *
+     * @returns {void}
+     */
     const updateTopEventClass = () => {
         if (eventList?.children.length > 0) {
             Array.from(eventList.children).forEach((child) =>
@@ -226,27 +259,57 @@
         }
     };
 
-    async function handleDateClick(date, event) {
-        const calendar = document.getElementById('calendar');
-        if (clickedDate === date) {
-            clickedDate = null;
-
-            calendar.style.borderTopRightRadius = '6px';
-            calendar.style.borderTopLeftRadius = '6px';
-        } else {
-            clickedDate = date;
-
-            const rect = calendar.getBoundingClientRect();
-            bottomOfCalendar = rect.height + window.innerHeight * 0.02;
-
-            calendar.style.borderTopRightRadius = '0px';
-            calendar.style.borderTopLeftRadius = '0px';
-
-            events = await getDateEvents(date);
-            events != [] ? updateTopEventClass() : null;
-        }
+    /**
+     * Resets the calendar's CSS style and sets the `clickedDate` variable to null.
+     *
+     * @returns {void}
+     */
+    function closeEventModalHandler() {
+        clickedDate = null;
+        calendar.style.borderTopRightRadius = '6px';
+        calendar.style.borderTopLeftRadius = '6px';
     }
 
+    /**
+     * Handles the submission of a new event.
+     *
+     * If the event list is empty, it adds the 'top-event' class to the "Add Event"
+     * button. It then sends a request to add the event to the server. If the
+     * request is successful, it updates the `events` variable and calls
+     * `updateTopEventClass` to update the `top-event` class of the elements in the
+     * event list. It also resets the `newEventName` and `eventIsEditing` variables.
+     *
+     * @param {Event} event - The event that triggered the function.
+     * @param {string} authToken - The authentication token for the API request.
+     *
+     * @returns {Promise<void>}
+     */
+    async function addEventHelper(event, authToken) {
+        eventList?.childElementCount === 1 ? document.querySelector('.add-event').classList.add('top-event') : '';
+        const success = await addEvent(event, newEventName, clickedDate, selectedMonth, authToken);
+        if (success) {
+            events = await getDateEvents(clickedDate, authToken, selectedMonth);
+            events !== [] ? updateTopEventClass() : null;
+            newEventName = '';
+            eventIsEditing = false;
+        }
+
+        // TODO: Implement error handling
+    }
+
+    /**
+     * Toggles the display of event information on hover.
+     *
+     * This function changes the text and styling of a span element within the
+     * event button. When hovering, it displays 'delete' with a 'material-symbols-rounded'
+     * class. When not hovering, it reverts to the event's name and removes the class.
+     *
+     * @param {Event} e - The DOM event object containing the current target element.
+     * @param {Object} eventData - The event data object containing event details.
+     * @param {boolean} isHovering - A flag indicating whether the event is being hovered.
+     *
+     * @returns {void}
+     */
     function handleEventHover(e, eventData, isHovering) {
         const spanElement = e.currentTarget.querySelector('span');
 
@@ -259,275 +322,23 @@
         }
     }
 
-    function closeEventModalHandler() {
-        clickedDate = null;
-        calendar.style.borderTopRightRadius = '6px';
-        calendar.style.borderTopLeftRadius = '6px';
-    }
-
-    async function getDateEvents(date) {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-events', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({date: getFullDate(date)})
-            });
-
-            if (response.status === 200) {
-                const data = await response.json();
-                events = data.events;
-
-                return events;
-            } else {
-                showErrorMsg('Unable to fetch events.');
-            }
-        } else {
-            window.location.href = '/login';
-        }
-    }
-
-    function handleNewEventClick() {
-        eventIsEditing = true;
-        document.querySelector('.add-event').classList.remove('top-event');
-        setTimeout(() => {
-            document.querySelector('.new-event-input').focus();
-        }, 100);
-        newEventName = '';
-    }
-
-    async function addEvent(event) {
-        eventList?.childElementCount === 1 ? document.querySelector('.add-event').classList.add('top-event') : '';
-
-        if (event.type == "blur" || event.key == "Enter") {
-            eventIsEditing = false;
-            if (newEventName && authToken) {
-                const response = await fetch('http://127.0.0.1:3000/api/new-event', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({name: newEventName, date: getFullDate(clickedDate)})
-                });
-
-                if (response.status == 200) {
-                    events = await getDateEvents(clickedDate);
-                    events != [] ? updateTopEventClass() : null;
-                    newEventName = '';
-                } else {
-                    showErrorMsg('Unable to add event.');
-                }
-            } else if (!authToken) {
-                window.location.href = '/login';
-            }
-        } else if (event.key == "Escape") {
-            eventIsEditing = false;
-            newEventName = '';
-        }
-    }
-
-    async function deleteEvent(event) {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/delete-event', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({name: event.name, date: getFullDate(clickedDate)})
-            });
-
-            if (response.status === 200) {
-                events = await getDateEvents(clickedDate);
-                events != [] ? updateTopEventClass() : null;
-            } else {
-                showErrorMsg('Unable to delete event.');
-            }
-        } else {
-            window.location.href = '/login';
-        }
-    }
-
-    // Assignments
-    let addAssignmentBtn;
-    let expandedAssignment;
-    let assignments = [];
-    let sortType = "subject";
-    let addAssignment = false;
-    let newAssignmentData = {
-        title: "",
-        dueDate: new Date(),
-        subject: "math",
-        priority: "medium",
-        description: ""
-    };
-
-    const subjectColors = {
-        "math": "#4A90E2",
-        "science": "#50E3C2",
-        "german": "#D0021B",
-        "history": "#8B3513",
-        "geography": "#008C8C",
-        "politics": "#9B4F96",
-        "english": "#F8E71C",
-        "pe": "#F8E71C",
-        "art": "#FF33CC",
-        "music": "#FFD700",
-        "computer_sience": "#50B7F5",
-        "religion": "#9B7DFF",
-        "eac": "#636363",
-        "other": "#D3D3D3"
-    };
-
-    $: sortType, updateAssignmentsSorting();
-    $: newAssignmentData.dueDate, formatSelectedDueDate();
-    $: if (addAssignment && addAssignmentBtn) addAssignmentBtn.focus();
-
-    async function getAssignments() {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/get-assignments', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 200) {
-                const data = await response.json();
-                assignments = data.assignments;
-                updateAssignmentsSorting();
-            } else {
-                showErrorMsg('Unable to fetch assignments.');
-            }
-        }
-    }
-
-    async function updateAssignmentsSorting() {
-        if (sortType == "subject") {
-            assignments = [...assignments].sort((a, b) => a.subject.localeCompare(b.subject));
-        } else if (sortType == "date") {
-            assignments = [...assignments].sort((a, b) => {
-                const parseDate = (dateString) => {
-                    const [day, month, year] = dateString.split('.');
-                    return new Date(`${year}-${month}-${day}`);
-                };
-
-                return parseDate(a.dueDate) - parseDate(b.dueDate);
-            });
-        } else if (sortType == "status") {
-            assignments = [...assignments].sort((a, b) => {
-                const statusOrder = {
-                    open: 0,
-                    inProgress: 1,
-                    done: 2,
-                };
-
-                return statusOrder[a.status] - statusOrder[b.status];
-            });
-        } else if (sortType == "priority") {
-            assignments = [...assignments].sort((a, b) => {
-                const priorityOrder = {
-                    lowest: 0,
-                    low: 1,
-                    medium: 2,
-                    high: 3,
-                    highest: 4
-                };
-
-                return priorityOrder[a.priority] - priorityOrder[b.priority];
-            });
-        }
-    }
-
-    async function updateAssignment(assignment) {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/update-assignment', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({assignment})
-            });
-
-            if (response.status === 200) {
-                await getAssignments();
-            } else {
-                showErrorMsg('Unable to update assignment.');
-            }
-        }
-    }
-
-    async function toggleAssignmentDetails(index, e) {
-        if (e.target.closest('.assignment-details-wrapper')) {
-            return;
-        }
-        expandedAssignment = expandedAssignment === index ? null : index;
-    }
-
-    async function deleteAssignmentHandler(index) {
-        if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/delete-assignment', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({assignment: assignments[index]})
-            });
-
-            if (response.status === 200) {
-                await getAssignments();
-            } else {
-                showErrorMsg('Unable to delete assignment.');
-            }
-        }
-    }
-
-    function formatSelectedDueDate() {
-        const dateObj = new Date(newAssignmentData.dueDate);
-        return `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
-    }
-
-    async function addAssignmentHandler(e) {
-        if (e.key == "Escape") {
-            addAssignment = false;
-            newAssignmentData = {
-                title: "",
-                dueDate: new Date(),
-                subject: "math",
-                priority: "medium",
-                description: ""
-            };
-        } else if (e.target == document.querySelector('.addAssignment')) {
-            if (authToken) {
-                const response = await fetch('http://127.0.0.1:3000/api/add-assignment', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newAssignmentData)
-                });
-
-                if (response.status === 200) {
-                    await getAssignments();
-                    addAssignment = false;
-                    newAssignmentData = {
-                        title: "",
-                        dueDate: new Date(),
-                        subject: "math",
-                        priority: "medium",
-                        description: ""
-                    };
-                } else {
-                    showErrorMsg('Unable to add assignment.');
-                }
-            }
+    /**
+     * Handles the deletion of an event.
+     *
+     * If the deletion is successful, this function updates the list of events and
+     * updates the CSS class of the first event button to have 'top-event'.
+     *
+     * @param {Object} event - The event object containing the name of the event to delete.
+     * @param {string} authToken - The authentication token for the API request.
+     *
+     * @returns {Promise<void>}
+     */
+    async function deleteEventHelper(event, authToken) {
+        const success = await deleteEvent(event, clickedDate, selectedMonth, authToken);
+        if (success) {
+            events = await getDateEvents(clickedDate, authToken, selectedMonth);
+            console.log(events);
+            events.length !== 0 ? updateTopEventClass() : document.querySelector('.add-event').classList.add('top-event');;
         }
     }
 </script>
@@ -541,9 +352,10 @@
         <div class="button-group-nav">
             <a href="/notes" class="nav">Notes</a>
             <!-- svelte-ignore a11y_img_redundant_alt -->
-            <button class="profile-pic" on:click={displayUserCardHandler}><img src={profilePicture}
-                                                                               alt="Your Profile Picture"
-                                                                               class="profile-pic-img"/></button>
+            <button class="profile-pic" on:click={() => {displayUserCard = displayUserCardHandler(displayUserCard)}}>
+                <img src={profilePicture}
+                     alt="Your Profile Picture"
+                     class="profile-pic-img"/></button>
         </div>
     </div>
     <div class="dashboard-content">
@@ -562,7 +374,7 @@
                         <p>New Note</p></button>
                 </div>
             </div>
-            <div class="calendar" id="calendar">
+            <div class="calendar" id="calendar" bind:this={calendar}>
                 <div class="calendar-header">
                     <h1>{currentDateDisplay}</h1>
                 </div>
@@ -574,9 +386,9 @@
                         {/each}
                     </select>
                     <div class="month-select-manual-wrapper">
-                        <button class="month-select-btn month-select-back" on:click={goBackMonth}><span
+                        <button class="month-select-btn month-select-back" on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
                                 class="material-symbols-rounded">arrow_back_ios</span></button>
-                        <button class="month-select-btn month-select-forward" on:click={goForwardMonth}><span
+                        <button class="month-select-btn month-select-forward" on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
                                 class="material-symbols-rounded">arrow_forward_ios</span></button>
                     </div>
                 </div>
@@ -592,8 +404,8 @@
 
                     <!-- Dates of the month -->
                     {#each dates as date}
-                        <button class="calendar-body-date {date === currentDay && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && currentMonth === new Date(selectedMonth).getMonth() && currentYear === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}"
-                                on:click={(event) => handleDateClick(date, event)}>{date}</button>
+                        <button class="calendar-body-date {date === getCurrentDate().getDate() && getCurrentDate().getMonth() === new Date(selectedMonth).getMonth() && getCurrentDate().getFullYear() === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && getCurrentDate().getMonth() === new Date(selectedMonth).getMonth() && getCurrentDate().getFullYear() === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}"
+                                on:click={(event) => dateClickHelper(date, event)}>{date}</button>
                     {/each}
                 </div>
             </div>
@@ -611,31 +423,31 @@
             </div>
             <div class="assignments-wrapper">
                 <div class="assignments-list">
-                    {#each assignments as assignment, index (assignment)}
-                        <button class="assignment {expandedAssignment == index ? 'expanded' : ''}"
+                    {#each $assignments as assignment, index (assignment.title)}
+                        <button class="assignment {expandedAssignment === index ? 'expanded' : ''}"
                                 style="border: 1px solid {subjectColors[assignment.subject.toLowerCase()]}"
-                                on:click={(e) => toggleAssignmentDetails(index, e)}>
+                                on:click={(e) => {handleExpandClick(index, e)}}>
                             <div class="assignment-base-info">
                                 <p class="assignment-title">{assignment.title}</p>
                                 <div class="right-assignment">
-                                    <span class="material-symbols-rounded priority {assignment.priority == "lowest" || assignment.priority == "low" ? "low" : assignment.priority == "medium" ? "medium" : assignment.priority == "high" || assignment.priority == "highest" ? "high" : ""}">{assignment.priority == "lowest" ? "keyboard_double_arrow_down" : assignment.priority == "low" ? "keyboard_arrow_down" : assignment.priority == "medium" ? "equal" : assignment.priority == "high" ? "keyboard_arrow_up" : "keyboard_double_arrow_up"}</span>
+                                    <span class="material-symbols-rounded priority {assignment.priority === "lowest" || assignment.priority == "low" ? "low" : assignment.priority == "medium" ? "medium" : assignment.priority == "high" || assignment.priority == "highest" ? "high" : ""}">{assignment.priority === "lowest" ? "keyboard_double_arrow_down" : assignment.priority === "low" ? "keyboard_arrow_down" : assignment.priority === "medium" ? "equal" : assignment.priority === "high" ? "keyboard_arrow_up" : "keyboard_double_arrow_up"}</span>
                                     <h3 class="due-date">{assignment.dueDate}</h3>
                                 </div>
                             </div>
-                            {#if expandedAssignment == index}
+                            {#if expandedAssignment === index}
                                 <div class="assignment-details-wrapper">
                                     <div class="assignment-details">
                                         <div class="assignment-details-info">
                                             <select id="assignment-status" class="assignment-select"
                                                     bind:value={assignment.status}
-                                                    on:change={() => updateAssignment(assignment)}>
+                                                    on:change={() => {updateAssignmentHelper(authToken, assignment)}}>
                                                 <option value="open">Open</option>
                                                 <option value="inProgress">In Progress</option>
                                                 <option value="done">Done</option>
                                             </select>
                                             <select id="assignment-priority" class="assignment-select priority-select"
                                                     bind:value={assignment.priority}
-                                                    on:change={() => updateAssignment(assignment)}>
+                                                    on:change={() => {updateAssignmentHelper(authToken, assignment)}}>
                                                 <option value="lowest">Lowest</option>
                                                 <option value="low">Low</option>
                                                 <option value="medium">Medium</option>
@@ -646,18 +458,18 @@
                                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                                         <!-- svelte-ignore a11y_no_static_element_interactions -->
                                         <span class="material-symbols-rounded delete"
-                                              on:click={(e) => {deleteAssignmentHandler(index)}}>delete</span>
+                                              on:click={(e) => {deleteAssignmentHelper(authToken, index, $assignments)}}>delete</span>
                                     </div>
                                     <textarea id="assignment-description" class="assignment-description"
                                               placeholder="Description..." bind:value={assignment.description}
-                                              on:blur={() => updateAssignment(assignment)}></textarea>
+                                              on:blur={() => {updateAssignmentHelper(authToken, assignment)}}></textarea>
                                 </div>
                             {/if}
                         </button>
                     {/each}
-                    {#if addAssignment}
+                    {#if isAddingAssignment}
                         <button class="assignment expanded" bind:this={addAssignmentBtn}
-                                on:keydown={(e) => {addAssignmentHandler(e)}}>
+                                on:keydown={async (e) => {isAddingAssignment = await addAssignment(authToken, e)}}>
                             <div class="assignment-base-info">
                                 <input class="assignment-title assignment-input" placeholder="Title..."
                                        bind:value={newAssignmentData.title}>
@@ -698,7 +510,7 @@
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                                     <span class="material-symbols-rounded addAssignment" style="font-size: 2rem"
-                                          on:click={(e) => {addAssignmentHandler(e)}}>add</span>
+                                          on:click={async (e) => {isAddingAssignment = await addAssignment(authToken, e)}}>add</span>
                                 </div>
                                 <textarea id="assignment-description" class="assignment-description"
                                           placeholder="Description..."
@@ -707,7 +519,7 @@
                         </button>
                     {/if}
                 </div>
-                <button class="add-assignment" on:click={()=>{addAssignment = true}}><span
+                <button class="add-assignment" on:click={()=>{isAddingAssignment = true}}><span
                         class="material-symbols-rounded">add</span>
                     <h1>Add Assignment</h1></button>
             </div>
@@ -719,7 +531,7 @@
     <div class="event-modal" style="bottom: calc({bottomOfCalendar}px - 1%);">
         <div class="event-modal-header">
             <div>
-                <h1>{clickedDate ? getFullDate(clickedDate) : 'N/A'}</h1>
+                <h1>{clickedDate ? getFullDate(clickedDate, selectedMonth) : 'N/A'}</h1>
             </div>
             <button class="close-btn" on:click={closeEventModalHandler}><span
                     class="material-symbols-rounded">close</span></button>
@@ -728,15 +540,15 @@
             {#each events as event}
                 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                 <button class="event top-event" on:mouseover={(e) =>  handleEventHover(e, event, true)}
-                        on:mouseout={(e) => handleEventHover(e, event, false)} on:click={() => deleteEvent(event)}>
+                        on:mouseout={(e) => handleEventHover(e, event, false)} on:click={() => deleteEventHelper(event, authToken)}>
                     <span>{event.name}</span></button>
             {/each}
             {#if eventIsEditing}
                 <input class="event new-event-input {eventList?.childElementCount === 1 ? 'top-event' : ''}" type="text"
-                       bind:value={newEventName} on:keydown={() => addEvent(event)} placeholder="Enter event name...">
+                       bind:value={newEventName} on:keydown={() => addEventHelper(event, authToken)} on:blur={() => addEventHelper(event, authToken)} placeholder="Enter event name...">
             {/if}
             <button class="event add-event bottom-event {eventList?.childElementCount === 1 ? 'top-event' : ''}"
-                    on:click={handleNewEventClick}><span class="material-symbols-rounded">add</span>
+                    on:click={() => {newEventName = ''; eventIsEditing = true; handleNewEventClick()}}><span class="material-symbols-rounded">add</span>
                 <p>New Event</p></button>
         </div>
     </div>

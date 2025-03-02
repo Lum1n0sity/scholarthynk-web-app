@@ -1,10 +1,21 @@
 <script>
   import { browser } from '$app/environment';
   import logo from '$lib/assets/logo.svg';
-  let isPasswordVisible = false;
+  import {hashPassword} from "$lib/js/user.js";
 
+  // Error handling
   let error = '';
   let timeout;
+
+  function showErrorMsg(err) {
+    error = err
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      error = '';
+    }, 5000);
+  }
+
+  let isPasswordVisible = false;
 
   let name;
   let email;
@@ -46,23 +57,6 @@
 
   function showHidePassword() {
     isPasswordVisible = !isPasswordVisible;
-  }
-
-  async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-
-  function showErrorMsg(err) {
-    error = err
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      error = '';
-    }, 5000);
   }
 </script>
 
