@@ -40,7 +40,7 @@
             body: userData
         })
             .then(response => {
-                if (response.status != 200) {
+                if (response.status !== 200) {
                     response.json().then(data => {
                         showErrorMsg(data.error);
                     });
@@ -80,7 +80,7 @@
         <div class="input-section">
             <h2 class="input-name">Password</h2>
             <div class="input-wrapper">
-                <input type="password" class="input" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" bind:value={password}>
+                <input type={isPasswordVisible ? 'text' : 'password'} class="input" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" bind:value={password}>
                 <button class="togglePW" on:click={showHidePassword}><span class="material-symbols-rounded">{isPasswordVisible ? 'visibility_off' : 'visibility'}</span></button>
             </div>
         </div>
