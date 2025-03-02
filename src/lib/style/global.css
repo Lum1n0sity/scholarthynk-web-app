@@ -23,7 +23,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(0deg, rgba(255,255,255,1) 20%, rgba(201,201,201,1) 100%) !important;
+  background: #ffffff !important;
   overflow: hidden;
 }
 

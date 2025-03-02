@@ -1,94 +1,100 @@
 <script>
-  import { browser } from '$app/environment';
-  import logo from '$lib/assets/logo.svg';
-  import {hashPassword} from "$lib/js/user.js";
+    import {browser} from '$app/environment';
+    import logo from '$lib/assets/logo.svg';
+    import {hashPassword} from "$lib/js/user.js";
 
-  // Error handling
-  let error = '';
-  let timeout;
+    // Error handling
+    let error = '';
+    let timeout;
 
-  function showErrorMsg(err) {
-    error = err
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      error = '';
-    }, 5000);
-  }
+    function showErrorMsg(err) {
+        error = err
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            error = '';
+        }, 5000);
+    }
 
-  let isPasswordVisible = false;
+    let isPasswordVisible = false;
 
-  let email;
-  let password;
+    let email;
+    let password;
 
-  function showHidePassword() {
-    isPasswordVisible = !isPasswordVisible;
-  }
+    function showHidePassword() {
+        isPasswordVisible = !isPasswordVisible;
+    }
 
-  async function handleSubmit() {
-    let hashedPassword = await hashPassword(password);
+    async function handleSubmit() {
+        let hashedPassword = await hashPassword(password);
 
-    const userData = JSON.stringify({
-      email: email,
-      password: hashedPassword,
-    });
+        const userData = JSON.stringify({
+            email: email,
+            password: hashedPassword,
+        });
 
-    fetch('http://localhost:3000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: userData
-    })
-      .then(response => {
-        if (response.status != 200) {
-          response.json().then(data => {
-            showErrorMsg(data.error);
-          });
-          return;
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (browser && data.authToken) {
-          localStorage.setItem('authToken', data.authToken);
-          window.location.href = '/home';
-        } else {
-          showErrorMsg('An error occurred. Please try again later.');
-        }
-      })
-      .catch(error => {showErrorMsg(error);});
-  }
+        fetch('http://localhost:3000/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: userData
+        })
+            .then(response => {
+                if (response.status != 200) {
+                    response.json().then(data => {
+                        showErrorMsg(data.error);
+                    });
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (browser && data.authToken) {
+                    localStorage.setItem('authToken', data.authToken);
+                    window.location.href = '/home';
+                } else {
+                    showErrorMsg('An error occurred. Please try again later.');
+                }
+            })
+            .catch(error => {
+                showErrorMsg(error);
+            });
+    }
 </script>
 
 <div class="body">
-  <div class="nav-bar">
-    <a href="/" class="logo">
-      <img src={logo} alt="logo" class="logo-img"/>
-      <h1 class="logo-name">SCHOLARTHYNK</h1>
-    </a>
-    <h1 class="page-title">Login</h1>
-  </div>
-  <div class="input-wrapper top-wrapper">
-    <h1 class="input-name">E-Mail</h1>
-    <input type="email" class="input" bind:value={email}>
-  </div>
-  <div class="input-wrapper input-wrapper-pw">
-    <h1 class="input-name">Password</h1>
-    <div class="password-wrapper">
-      <input type={isPasswordVisible ? 'text' : 'password'} class="input input-password" bind:value={password}>
-      <button class="show-hide-btn" on:click={showHidePassword}><span class="material-symbols-rounded show-hide-icon">{isPasswordVisible ? 'visibility_off' : 'visibility'}</span></button>
+    <div class="nav-bar">
+        <a href="/" class="logo">
+            <img src={logo} alt="logo" class="logo-img"/>
+            <h1 class="logo-name">SCHOLARTHYNK</h1>
+        </a>
+        <h1 class="page-title">Login</h1>
     </div>
-  </div>
-  <button class="button login" on:click={handleSubmit}>Login</button>
+    <div class="inputs">
+        <div class="input-section">
+            <h2 class="input-name">Email</h2>
+            <div class="input-wrapper">
+                <input type="text" class="input" bind:value={email}>
+            </div>
+        </div>
+        <div class="input-section">
+            <h2 class="input-name">Password</h2>
+            <div class="input-wrapper">
+                <input type="password" class="input" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" bind:value={password}>
+                <button class="togglePW" on:click={showHidePassword}><span class="material-symbols-rounded">{isPasswordVisible ? 'visibility_off' : 'visibility'}</span></button>
+            </div>
+        </div>
+    </div>
+    <button class="button login" on:click={handleSubmit}>Login</button>
 </div>
 
 {#if error}
-  <div class="error-wrapper">
-    <h1 class="error">{error}</h1>
-  </div>
+    <div class="error-wrapper">
+        <h1 class="error">{error}</h1>
+    </div>
 {/if}
 
 <style>
-  @import "$lib/style/global.css";
-  @import "$lib/style/login.css";
+    @import "$lib/style/global.css";
+    @import "$lib/style/login.css";
 </style>
