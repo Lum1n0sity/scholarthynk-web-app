@@ -126,6 +126,7 @@
 
     let clickedDate = null;
     let bottomOfCalendar = null;
+    let calendarWidth;
     let eventList;
     let events;
     let eventIsEditing = false;
@@ -230,6 +231,7 @@
             bottomOfCalendar = dateClick.bottomOfCalendar;
             events = dateClick.events;
             clickedDate = dateClick.clickedDate;
+            calendarWidth = dateClick.width;
 
             events !== [] ? updateTopEventClass() : null;
 
@@ -359,58 +361,56 @@
         </div>
     </div>
     <div class="dashboard-content">
-        <div class="double-section">
-            <div class="recent-notes">
-                <h1 class="section-title">Recent Notes</h1>
-                <div class="notes-list">
-                    <div class="notes-list-item">
-                        <p class="note-title">Study Tips for Final Exams</p>
-                        <p>02.01.2025</p>
-                    </div>
-                </div>
-                <div class="button-wrapper">
-                    <button class="button view-all-notes">View All</button>
-                    <button class="button add-note"><span class="material-symbols-rounded">add_notes</span>
-                        <p>New Note</p></button>
+        <div class="recent-notes" style="grid-area: box-1">
+            <h1 class="section-title">Recent Notes</h1>
+            <div class="notes-list">
+                <div class="notes-list-item">
+                    <p class="note-title">Study Tips for Final Exams</p>
+                    <p>02.01.2025</p>
                 </div>
             </div>
-            <div class="calendar" id="calendar" bind:this={calendar}>
-                <div class="calendar-header">
-                    <h1>{currentDateDisplay}</h1>
-                </div>
-                <div class="month-selector">
-                    <select id="month-select" class="month-dropdown" bind:value={selectedMonth}>
-                        {#each monthSelectOptions as monthOption}
-                            {@const [month, year] = monthOption.split('-')}
-                            <option value={monthOption}>{monthLookup[month.toLowerCase()] || 'Invalid month'} {year}</option>
-                        {/each}
-                    </select>
-                    <div class="month-select-manual-wrapper">
-                        <button class="month-select-btn month-select-back" on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
-                                class="material-symbols-rounded">arrow_back_ios</span></button>
-                        <button class="month-select-btn month-select-forward" on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
-                                class="material-symbols-rounded">arrow_forward_ios</span></button>
-                    </div>
-                </div>
-                <div class="calendar-body" id="calendar-body">
-                    {#each daysOfWeek as day}
-                        <p class="calendar-body-day">{day}</p>
-                    {/each}
-
-                    <!-- Empty slots for alignment -->
-                    {#each emptyDates as _}
-                        <div class="calendar-body-day-empty"></div>
-                    {/each}
-
-                    <!-- Dates of the month -->
-                    {#each dates as date}
-                        <button class="calendar-body-date {date === getCurrentDate().getDate() && getCurrentDate().getMonth() === new Date(selectedMonth).getMonth() && getCurrentDate().getFullYear() === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && getCurrentDate().getMonth() === new Date(selectedMonth).getMonth() && getCurrentDate().getFullYear() === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}"
-                                on:click={(event) => dateClickHelper(date, event)}>{date}</button>
-                    {/each}
-                </div>
+            <div class="button-wrapper">
+                <button class="button view-all-notes">View All</button>
+                <button class="button add-note"><span class="material-symbols-rounded">add_notes</span>
+                    <p>New Note</p></button>
             </div>
         </div>
-        <div class="assignments">
+        <div class="calendar" id="calendar" bind:this={calendar} style="grid-area: box-2">
+            <div class="calendar-header">
+                <h1>{currentDateDisplay}</h1>
+            </div>
+            <div class="month-selector">
+                <select id="month-select" class="month-dropdown" bind:value={selectedMonth}>
+                    {#each monthSelectOptions as monthOption}
+                        {@const [month, year] = monthOption.split('-')}
+                        <option value={monthOption}>{monthLookup[month.toLowerCase()] || 'Invalid month'} {year}</option>
+                    {/each}
+                </select>
+                <div class="month-select-manual-wrapper">
+                    <button class="month-select-btn month-select-back" on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
+                            class="material-symbols-rounded">arrow_back_ios</span></button>
+                    <button class="month-select-btn month-select-forward" on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
+                            class="material-symbols-rounded">arrow_forward_ios</span></button>
+                </div>
+            </div>
+            <div class="calendar-body" id="calendar-body">
+                {#each daysOfWeek as day}
+                    <p class="calendar-body-day">{day}</p>
+                {/each}
+
+                <!-- Empty slots for alignment -->
+                {#each emptyDates as _}
+                    <div class="calendar-body-day-empty"></div>
+                {/each}
+
+                <!-- Dates of the month -->
+                {#each dates as date}
+                    <button class="calendar-body-date {date === getCurrentDate().getDate() && getCurrentDate().getMonth() === new Date(selectedMonth).getMonth() && getCurrentDate().getFullYear() === new Date(selectedMonth).getFullYear() ? 'current-date' : ''} {clickedDate === date && getCurrentDate().getMonth() === new Date(selectedMonth).getMonth() && getCurrentDate().getFullYear() === new Date(selectedMonth).getFullYear() ? 'selected-date' : ''}"
+                            on:click={(event) => dateClickHelper(date, event)}>{date}</button>
+                {/each}
+            </div>
+        </div>
+        <div class="assignments" style="grid-area: box-3">
             <h1 class="section-title">Assignments</h1>
             <div class="sort-options-wrapper">
                 <h2>Filter by</h2>
@@ -524,11 +524,14 @@
                     <h1>Add Assignment</h1></button>
             </div>
         </div>
+        <div class="placeholderDashboard" style="grid-area: box-4">
+
+        </div>
     </div>
 </div>
 
 {#if clickedDate}
-    <div class="event-modal" style="bottom: calc({bottomOfCalendar}px - 1%);">
+    <div class="event-modal" style="bottom: calc({bottomOfCalendar}px - 2%); width: {calendarWidth}px">
         <div class="event-modal-header">
             <div>
                 <h1>{clickedDate ? getFullDate(clickedDate, selectedMonth) : 'N/A'}</h1>
