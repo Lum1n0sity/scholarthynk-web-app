@@ -48,6 +48,8 @@
     let popupMessage = '';
     let popupType = '';
 
+    let displayNewNotification = false;
+
     /**
      * Adds a new notification to the notification queue and displays it immediately if the queue was previously empty
      *
@@ -61,6 +63,7 @@
      */
     function newNotification(type, title, message) {
         addNotification(type, title, message, getFullCurrentDate());
+        displayNewNotification = true;
 
         messageQueue.push({type, title, message});
         if (!displayMessage) {
@@ -384,7 +387,8 @@
         if (success) {
             events = await getDateEvents(clickedDate, authToken, selectedMonth);
             console.log(events);
-            events.length !== 0 ? updateTopEventClass() : document.querySelector('.add-event').classList.add('top-event');;
+            events.length !== 0 ? updateTopEventClass() : document.querySelector('.add-event').classList.add('top-event');
+            ;
         }
     }
 </script>
@@ -431,9 +435,11 @@
                     {/each}
                 </select>
                 <div class="month-select-manual-wrapper">
-                    <button class="month-select-btn month-select-back" on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
+                    <button class="month-select-btn month-select-back"
+                            on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
                             class="material-symbols-rounded">arrow_back_ios</span></button>
-                    <button class="month-select-btn month-select-forward" on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
+                    <button class="month-select-btn month-select-forward"
+                            on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
                             class="material-symbols-rounded">arrow_forward_ios</span></button>
                 </div>
             </div>
@@ -587,15 +593,18 @@
             {#each events as event}
                 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                 <button class="event top-event" on:mouseover={(e) =>  handleEventHover(e, event, true)}
-                        on:mouseout={(e) => handleEventHover(e, event, false)} on:click={() => deleteEventHelper(event, authToken)}>
+                        on:mouseout={(e) => handleEventHover(e, event, false)}
+                        on:click={() => deleteEventHelper(event, authToken)}>
                     <span>{event.name}</span></button>
             {/each}
             {#if eventIsEditing}
                 <input class="event new-event-input {eventList?.childElementCount === 1 ? 'top-event' : ''}" type="text"
-                       bind:value={newEventName} on:keydown={() => addEventHelper(event, authToken)} on:blur={() => addEventHelper(event, authToken)} placeholder="Enter event name...">
+                       bind:value={newEventName} on:keydown={() => addEventHelper(event, authToken)}
+                       on:blur={() => addEventHelper(event, authToken)} placeholder="Enter event name...">
             {/if}
             <button class="event add-event bottom-event {eventList?.childElementCount === 1 ? 'top-event' : ''}"
-                    on:click={() => {newEventName = ''; eventIsEditing = true; handleNewEventClick()}}><span class="material-symbols-rounded">add</span>
+                    on:click={() => {newEventName = ''; eventIsEditing = true; handleNewEventClick()}}><span
+                    class="material-symbols-rounded">add</span>
                 <p>New Event</p></button>
         </div>
     </div>
@@ -617,8 +626,9 @@
             <button class="card-fab">
                 <span class="material-symbols-rounded">settings</span>
             </button>
-            <button class="card-fab" on:click={() => {displayNotifications = true; displayUserCard = false}}>
-                <span class="material-symbols-rounded">notifications</span>
+            <button class="card-fab"
+                    on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
+                <span class="material-symbols-rounded">{displayNewNotification ? 'notifications_unread' : 'notifications'}</span>
             </button>
             <button class="card-fab">
                 <span class="material-symbols-rounded">logout</span>
@@ -637,33 +647,47 @@
     <div class="notifications">
         <div class="notifications-header">
             <h2 class="notifications-title">Notifications</h2>
-            <button class="notifications-close" on:click={displayNotifications = false}><span class="material-symbols-rounded">remove</span></button>
+            <button class="notifications-close" on:click={displayNotifications = false}><span
+                    class="material-symbols-rounded">remove</span></button>
         </div>
         {#if $notifications.length > 0}
-            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span class="material-symbols-rounded">delete</span> Clear</button>
+            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span
+                    class="material-symbols-rounded">delete</span> Clear
+            </button>
         {/if}
         <div class="notifications-list">
             {#each $notifications as notification}
                 {#if notification.type === "error"}
                     <div class="notification notifications-error">
-                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
-                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
-                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
-                        <span class="material-symbols-rounded error-icon" style="grid-area: notification-icon;">error</span>
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded error-icon"
+                              style="grid-area: notification-icon;">error</span>
                     </div>
                 {:else if notification.type === "warning"}
                     <div class="notification notifications-warning">
-                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
-                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
-                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
                         <span class="material-symbols-rounded warning-icon" style="grid-area: notification-icon;">warning</span>
                     </div>
                 {:else if notification.type === "info"}
                     <div class="notification notifications-info">
-                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
-                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
-                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
-                        <span class="material-symbols-rounded info-icon" style="grid-area: notification-icon;">info</span>
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded info-icon"
+                              style="grid-area: notification-icon;">info</span>
                     </div>
                 {/if}
             {/each}
@@ -672,7 +696,8 @@
 {/if}
 
 {#if displayMessage}
-    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}">
+    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}"
+            on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
         <h1 class="popup-message">{popupMessage}</h1>
         <span class="material-symbols-rounded {popupType === 'error' ? 'error-popup-icon' : popupType === 'warning' ? 'warning-popup-icon' : 'info-popup-icon'}">{popupType === "error" ? "error" : popupType === "warning" ? "warning" : "info"}</span>
     </button>

@@ -35,6 +35,8 @@
     let popupMessage = '';
     let popupType = '';
 
+    let displayNewNotification = false;
+
     /**
      * Adds a new notification to the notification queue and displays it immediately if the queue was previously empty
      *
@@ -48,6 +50,7 @@
      */
     function newNotificationNotes(type, title, message) {
         addNotification(type, title, message, getFullCurrentDate());
+        displayNewNotification = true;
 
         messageQueue.push({type, title, message});
         if (!displayMessage) {
@@ -228,8 +231,12 @@
      */
     async function refreshFV(folder) {
         let fvItems = await getFVItems(folder, path, authToken);
-        folders = fvItems.folders;
-        files = fvItems.files;
+
+        if (fvItems && typeof fvItems === "object") {
+            folders = fvItems.folders || [];
+            files = fvItems.files || [];
+        }
+
     }
 
     /**
@@ -613,33 +620,47 @@
     <div class="notifications">
         <div class="notifications-header">
             <h2 class="notifications-title">Notifications</h2>
-            <button class="notifications-close" on:click={displayNotifications = false}><span class="material-symbols-rounded">remove</span></button>
+            <button class="notifications-close" on:click={displayNotifications = false}><span
+                    class="material-symbols-rounded">remove</span></button>
         </div>
         {#if $notifications.length > 0}
-            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span class="material-symbols-rounded">delete</span> Clear</button>
+            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span
+                    class="material-symbols-rounded">delete</span> Clear
+            </button>
         {/if}
         <div class="notifications-list">
             {#each $notifications as notification}
                 {#if notification.type === "error"}
                     <div class="notification notifications-error">
-                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
-                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
-                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
-                        <span class="material-symbols-rounded error-icon" style="grid-area: notification-icon;">error</span>
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded error-icon"
+                              style="grid-area: notification-icon;">error</span>
                     </div>
                 {:else if notification.type === "warning"}
                     <div class="notification notifications-warning">
-                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
-                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
-                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
                         <span class="material-symbols-rounded warning-icon" style="grid-area: notification-icon;">warning</span>
                     </div>
                 {:else if notification.type === "info"}
                     <div class="notification notifications-info">
-                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
-                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
-                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
-                        <span class="material-symbols-rounded info-icon" style="grid-area: notification-icon;">info</span>
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded info-icon"
+                              style="grid-area: notification-icon;">info</span>
                     </div>
                 {/if}
             {/each}
@@ -695,8 +716,9 @@
             <button class="card-fab">
                 <span class="material-symbols-rounded">settings</span>
             </button>
-            <button class="card-fab" on:click={() => {displayNotifications = true; displayUserCard = false}}>
-                <span class="material-symbols-rounded">notifications</span>
+            <button class="card-fab"
+                    on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
+                <span class="material-symbols-rounded">{displayNewNotification ? 'notifications_unread' : 'notifications'}</span>
             </button>
             <button class="card-fab">
                 <span class="material-symbols-rounded">logout</span>
@@ -712,7 +734,8 @@
 {/if}
 
 {#if displayMessage}
-    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}">
+    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}"
+            on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
         <h1 class="popup-message">{popupMessage}</h1>
         <span class="material-symbols-rounded {popupType === 'error' ? 'error-popup-icon' : popupType === 'warning' ? 'warning-popup-icon' : 'info-popup-icon'}">{popupType === "error" ? "error" : popupType === "warning" ? "warning" : "info"}</span>
     </button>
