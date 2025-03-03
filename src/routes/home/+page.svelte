@@ -12,7 +12,8 @@
         formatSelectedDueDate,
         updateAssignment,
         updateAssignmentsSorting,
-        deleteAssignment
+        deleteAssignment,
+        newNotificationTA
     } from '$lib/js/home/assignments.js';
     import {
         getCurrentDate,
@@ -26,8 +27,11 @@
         handleNewEventClick,
         addEvent,
         getDateEvents,
-        deleteEvent
+        deleteEvent,
+        newNotificationTC
     } from "$lib/js/home/calendar.js";
+    import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
+    import {getFullCurrentDate} from "$lib/js/utils.js";
 
     const authToken = getAuthToken();
 
@@ -37,8 +41,66 @@
     let email = '';
 
     let displayUserCard = false;
+    let displayNotifications = false;
+
+    let messageQueue = [];
+    let displayMessage = false;
+    let popupMessage = '';
+    let popupType = '';
+
+    let displayNewNotification = false;
+
+    /**
+     * Adds a new notification to the notification queue and displays it immediately if the queue was previously empty
+     *
+     * The notification will be added to the top of the queue and will be displayed immediately if the queue was previously empty.
+     * If the queue was not empty, the notification will be added to the top of the queue and will be displayed once the previous message has been displayed for 5 seconds.
+     *
+     * @function newNotificationNotes
+     * @param {string} type - The type of the notification. Can be "error", "warning", or "info".
+     * @param {string} title - The title of the notification.
+     * @param {string} message - The message of the notification.
+     */
+    function newNotification(type, title, message) {
+        addNotification(type, title, message, getFullCurrentDate());
+        displayNewNotification = true;
+
+        messageQueue.push({type, title, message});
+        if (!displayMessage) {
+            showNextMessage();
+        }
+    }
+
+    // Pass newNotification function to external js files
+    newNotificationTC(newNotification);
+    newNotificationTA(newNotification);
+
+    /**
+     * Displays the next message in the queue, or does nothing if the queue is empty
+     *
+     * When called, the function will display the next message in the queue and start a timer.
+     * When the timer expires, the function will hide the current message and call itself again.
+     *
+     * @function showNextMessage
+     */
+    function showNextMessage() {
+        if (messageQueue.length === 0) return;
+
+        const nextMessage = messageQueue.shift();
+        popupMessage = nextMessage.title;
+        popupType = nextMessage.type;
+        displayMessage = true;
+
+        setTimeout(() => {
+            displayMessage = false;
+            showNextMessage();
+        }, 5000);
+    }
 
     onMount(async () => {
+        // Clear notifications:
+        clearNotifications();
+
         selectedMonth = monthSelectOptions[0];
 
         currentDateDisplay = getFormattedCurrentDate();
@@ -53,19 +115,6 @@
         profilePicture = await getProfilePic(authToken);
         assignments.set(await getAssignments(authToken, sortType));
     });
-
-    // Error handling
-    let timeout;
-    let error = '';
-    function showErrorMsg(err) {
-        if (err) {
-            error = err;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                error = '';
-            }, 5000);
-        }
-    }
 
     // Runes
     $: sortType, assignments.set(updateAssignmentsSorting($assignments, sortType));
@@ -295,8 +344,6 @@
             newEventName = '';
             eventIsEditing = false;
         }
-
-        // TODO: Implement error handling
     }
 
     /**
@@ -340,7 +387,8 @@
         if (success) {
             events = await getDateEvents(clickedDate, authToken, selectedMonth);
             console.log(events);
-            events.length !== 0 ? updateTopEventClass() : document.querySelector('.add-event').classList.add('top-event');;
+            events.length !== 0 ? updateTopEventClass() : document.querySelector('.add-event').classList.add('top-event');
+            ;
         }
     }
 </script>
@@ -387,9 +435,11 @@
                     {/each}
                 </select>
                 <div class="month-select-manual-wrapper">
-                    <button class="month-select-btn month-select-back" on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
+                    <button class="month-select-btn month-select-back"
+                            on:click={() => {selectedMonth = goBackMonth(selectedMonth)}}><span
                             class="material-symbols-rounded">arrow_back_ios</span></button>
-                    <button class="month-select-btn month-select-forward" on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
+                    <button class="month-select-btn month-select-forward"
+                            on:click={() => {selectedMonth = goForwardMonth(selectedMonth)}}><span
                             class="material-symbols-rounded">arrow_forward_ios</span></button>
                 </div>
             </div>
@@ -543,15 +593,18 @@
             {#each events as event}
                 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                 <button class="event top-event" on:mouseover={(e) =>  handleEventHover(e, event, true)}
-                        on:mouseout={(e) => handleEventHover(e, event, false)} on:click={() => deleteEventHelper(event, authToken)}>
+                        on:mouseout={(e) => handleEventHover(e, event, false)}
+                        on:click={() => deleteEventHelper(event, authToken)}>
                     <span>{event.name}</span></button>
             {/each}
             {#if eventIsEditing}
                 <input class="event new-event-input {eventList?.childElementCount === 1 ? 'top-event' : ''}" type="text"
-                       bind:value={newEventName} on:keydown={() => addEventHelper(event, authToken)} on:blur={() => addEventHelper(event, authToken)} placeholder="Enter event name...">
+                       bind:value={newEventName} on:keydown={() => addEventHelper(event, authToken)}
+                       on:blur={() => addEventHelper(event, authToken)} placeholder="Enter event name...">
             {/if}
             <button class="event add-event bottom-event {eventList?.childElementCount === 1 ? 'top-event' : ''}"
-                    on:click={() => {newEventName = ''; eventIsEditing = true; handleNewEventClick()}}><span class="material-symbols-rounded">add</span>
+                    on:click={() => {newEventName = ''; eventIsEditing = true; handleNewEventClick()}}><span
+                    class="material-symbols-rounded">add</span>
                 <p>New Event</p></button>
         </div>
     </div>
@@ -573,6 +626,10 @@
             <button class="card-fab">
                 <span class="material-symbols-rounded">settings</span>
             </button>
+            <button class="card-fab"
+                    on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
+                <span class="material-symbols-rounded">{displayNewNotification ? 'notifications_unread' : 'notifications'}</span>
+            </button>
             <button class="card-fab">
                 <span class="material-symbols-rounded">logout</span>
             </button>
@@ -586,10 +643,64 @@
     </div>
 {/if}
 
-{#if error}
-    <div class="error-wrapper">
-        <h1 class="error">{error}</h1>
+{#if displayNotifications}
+    <div class="notifications">
+        <div class="notifications-header">
+            <h2 class="notifications-title">Notifications</h2>
+            <button class="notifications-close" on:click={displayNotifications = false}><span
+                    class="material-symbols-rounded">remove</span></button>
+        </div>
+        {#if $notifications.length > 0}
+            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span
+                    class="material-symbols-rounded">delete</span> Clear
+            </button>
+        {/if}
+        <div class="notifications-list">
+            {#each $notifications as notification}
+                {#if notification.type === "error"}
+                    <div class="notification notifications-error">
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded error-icon"
+                              style="grid-area: notification-icon;">error</span>
+                    </div>
+                {:else if notification.type === "warning"}
+                    <div class="notification notifications-warning">
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded warning-icon" style="grid-area: notification-icon;">warning</span>
+                    </div>
+                {:else if notification.type === "info"}
+                    <div class="notification notifications-info">
+                        <h3 class="notification-title notifications-content"
+                            style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content"
+                           style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content"
+                           style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded info-icon"
+                              style="grid-area: notification-icon;">info</span>
+                    </div>
+                {/if}
+            {/each}
+        </div>
     </div>
+{/if}
+
+{#if displayMessage}
+    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}"
+            on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
+        <h1 class="popup-message">{popupMessage}</h1>
+        <span class="material-symbols-rounded {popupType === 'error' ? 'error-popup-icon' : popupType === 'warning' ? 'warning-popup-icon' : 'info-popup-icon'}">{popupType === "error" ? "error" : popupType === "warning" ? "warning" : "info"}</span>
+    </button>
 {/if}
 
 <style>

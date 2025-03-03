@@ -1,7 +1,6 @@
 import { browser } from '$app/environment';
-// import { writable } from 'svelte/store';
 
-const authToken = null;
+let authToken = null;
 
 if (browser) {
     window.addEventListener('storage', () => {
@@ -34,5 +33,19 @@ export function setAuthToken(token) {
             localStorage.removeItem('authToken');
         }
     }
-    authToken.set(token);
+
+    authToken = token;
+}
+
+/**
+ * Logs the user out by removing the auth token from storage and redirecting
+ * them to the login page.
+ *
+ * @returns {void}
+ */
+export function logout() {
+    if (browser) {
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+    }
 }

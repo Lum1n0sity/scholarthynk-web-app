@@ -1,6 +1,22 @@
-// TODO: Remove/Replace all showErrorMsg() calls
+import {logout} from "$lib/js/auth.js";
 
 const currentDate = new Date();
+
+let newNotification = null;
+
+/**
+ * Sets a new notification callback function.
+ *
+ * If a callback function is provided, it updates the `newNotification` variable
+ * to the provided callback.
+ *
+ * @param {Function|null} callback - The callback function to set as the new notification handler.
+ */
+export function newNotificationTC(callback) {
+    if (callback) {
+        newNotification = callback;
+    }
+}
 
 /**
  * Returns the current date.
@@ -129,7 +145,6 @@ export function goBackMonth(selectedMonth) {
  * @returns {string} The month and year of the month after the given month.
  */
 export function goForwardMonth(selectedMonth) {
-    // console.log(selectedMonth);
     const [month, year] = selectedMonth.split('-');
     let monthIndex = new Date(`${month} 1, ${year}`).getMonth();
     let yearIndex = parseInt(year);
@@ -211,16 +226,26 @@ export async function getDateEvents(date, authToken, selectedMonth) {
 
         if (response.status === 200) {
             const data = await response.json();
-            let events = data.events;
-
-            return events;
+            return data.events;
+        } else if (response.status === 400) {
+            newNotification("error", "Invalid date", await response.json().error);
+            return null;
+        } else if (response.status === 409) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return null;
+        } else if (response.status === 500) {
+            console.log(await response.json().error);
+            newNotification("error", "Error while loading your events", await response.json().error);
+            return null;
         } else {
-            // showErrorMsg('Unable to fetch events.');
-            // TODO: Implement error handling
+            newNotification("error", "Unable to load your events", "There was an unexpected error. Please try again!");
             return null;
         }
     } else {
-        window.location.href = '/login';
+        newNotification("error", "Unauthorized", "You are not logged in!");
+        setTimeout(() => {logout();}, 5000);
+        return null;
     }
 }
 
@@ -270,12 +295,27 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
 
             if (response.status === 200) {
                 return true;
+            } else if (response.status === 400) {
+                newNotification("error", "Invalid input", await response.json().error);
+                return false;
+            } else if (response.status === 409) {
+                newNotification("error", "Event already exists", await response.json().error);
+                return false;
+            } else if (response.status === 401) {
+                newNotification("error", "Unauthorized", await response.json().error);
+                setTimeout(() => {logout();}, 5000);
+                return false;
+            } else if (response.status === 500) {
+                newNotification("error", "Error while adding your event", await response.json().error);
+                return false;
             } else {
-                // TODO: Implement error handling
+                newNotification("error", "Unable to add your event", "There was an unexpected error. Please try again!");
                 return false;
             }
         } else if (!authToken) {
-            window.location.href = '/login';
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
         }
     } else if (event.key === "Escape") {
         return false;
@@ -310,12 +350,26 @@ export async function deleteEvent(event, clickedDate, selectedMonth, authToken) 
 
         if (response.status === 200) {
             return true;
+        } else if (response.status === 400) {
+            newNotification("error", "Invalid input", await response.json().error);
+            return false;
+        } else if (response.status === 404) {
+            newNotification("error", "Event not found", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while deleting your event", await response.json().error);
+            return false;
         } else {
-            // showErrorMsg('Unable to delete event.');
-            // TODO: Implement error handling
+            newNotification("error", "Unable to delete your event", "There was an unexpected error. Please try again!");
             return false;
         }
     } else {
-        window.location.href = '/login';
+        newNotification("error", "Unauthorized", await response.json().error);
+        setTimeout(() => {logout();}, 5000);
+        return false;
     }
 }

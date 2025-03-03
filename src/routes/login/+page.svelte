@@ -3,10 +3,19 @@
     import logo from '$lib/assets/logo.svg';
     import {hashPassword} from "$lib/js/user.js";
 
-    // Error handling
     let error = '';
     let timeout;
 
+    let isPasswordVisible = false;
+
+    let email;
+    let password;
+
+    /**
+     * Shows an error message for 5 seconds.
+     *
+     * @param {string} err The error message to be displayed.
+     */
     function showErrorMsg(err) {
         error = err
         clearTimeout(timeout);
@@ -15,15 +24,31 @@
         }, 5000);
     }
 
-    let isPasswordVisible = false;
-
-    let email;
-    let password;
-
+    /**
+     * Toggles the visibility of the password input.
+     *
+     * When the password input is focused and this function is called, it toggles the
+     * `type` attribute of the input between "password" and "text", effectively
+     * showing or hiding the password.
+     */
     function showHidePassword() {
         isPasswordVisible = !isPasswordVisible;
     }
 
+    /**
+     * Handles the login form submission.
+     *
+     * This function hashes the user's password and sends a POST request to the login API
+     * endpoint with the user's email and hashed password. Based on the server's response,
+     * it performs the following actions:
+     * - If the response status is 200 and an auth token is received, it stores the token
+     *   in local storage and redirects the user to the home page.
+     * - If the response status is 401, it shows an error message indicating invalid credentials.
+     * - If the response status is 500, it shows an error message indicating a server error.
+     * - For any other response status, it shows an "Unexpected error" message.
+     *
+     * @returns {Promise<void>} A promise that resolves when the login process is complete.
+     */
     async function handleSubmit() {
         let hashedPassword = await hashPassword(password);
 
@@ -32,33 +57,29 @@
             password: hashedPassword,
         });
 
-        fetch('http://localhost:3000/api/login', {
+        const response = await fetch('http://localhost:3000/api/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: userData
-        })
-            .then(response => {
-                if (response.status !== 200) {
-                    response.json().then(data => {
-                        showErrorMsg(data.error);
-                    });
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (browser && data.authToken) {
-                    localStorage.setItem('authToken', data.authToken);
-                    window.location.href = '/home';
-                } else {
-                    showErrorMsg('An error occurred. Please try again later.');
-                }
-            })
-            .catch(error => {
-                showErrorMsg(error);
-            });
+        });
+
+        if (response.status === 200) {
+            const data = await response.json();
+            if (browser && data.authToken) {
+                localStorage.setItem('authToken', data.authToken);
+                window.location.href = '/home';
+            } else {
+                showErrorMsg("Invalid server response!");
+            }
+        } else if (response.status === 401) {
+            showErrorMsg("Invalid credentials!");
+        } else if (response.status === 500) {
+            showErrorMsg("Error logging in!");
+        } else {
+            showErrorMsg("Unexpected error!");
+        }
     }
 </script>
 
@@ -89,8 +110,9 @@
 </div>
 
 {#if error}
-    <div class="error-wrapper">
-        <h1 class="error">{error}</h1>
+    <div class="message-popup error-popup">
+        <h1 class="popup-message">{error}</h1>
+        <span class="material-symbols-rounded error-popup-icon">error</span>
     </div>
 {/if}
 
