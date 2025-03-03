@@ -1,7 +1,7 @@
 <script>
     import logo from '$lib/assets/logo.svg';
     import {onMount} from 'svelte';
-    // import DOMPurify from 'dompurify';
+    import DOMPurify from 'dompurify';
     import {getAuthToken, logout} from "$lib/js/auth.js";
     import {getUserData, getProfilePic, displayUserCardHandler} from "$lib/js/user.js";
     import {
@@ -346,7 +346,10 @@
      * @returns {Promise<void>}
      */
     async function handleNoteInput() {
-        noteContent = noteEditor.innerHTML;
+        let sanitizedContent = DOMPurify.sanitize(noteEditor.innerHTML)
+        console.log(sanitizedContent);
+        noteContent = sanitizedContent;
+        noteEditor.innerHTML = noteContent;
 
         clearTimeout(timeoutNoteEditor);
 
