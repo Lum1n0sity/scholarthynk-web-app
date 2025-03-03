@@ -27,7 +27,7 @@
   overflow: hidden;
 }
 
-.error-popup {
+.message-popup {
   position: absolute;
   top: 14%;
   right: 1%;
@@ -37,7 +37,6 @@
   background: #fff;
   border-radius: 0 0 6px 6px;
   border: 2px solid #B6B6B6;
-  border-top: 3px solid #CD0000;
   min-width: 14%;
   max-width: 20%;
   height: 7%;
@@ -46,7 +45,19 @@
   transition: .5s;
 }
 
-.error-message {
+.error-popup {
+  border-top: 3px solid #CD0000;
+}
+
+.warning-popup {
+  border-top: 3px solid #FFA947;
+}
+
+.info-popup {
+  border-top: 3px solid #10222F;
+}
+
+.popup-message {
   margin-right: auto;
   width: -webkit-fill-available;
   text-align: right;
@@ -56,14 +67,25 @@
   margin-left: 4%;
 }
 
-.error-popup span {
-  color: #CD0000;
+.message-popup span {
   font-size: 2.5rem;
   font-weight: bold;
   margin: 4%;
 }
 
-.error-popup:hover {
+.error-popup-icon {
+  color: #CD0000;
+}
+
+.warning-popup-icon {
+  color: #FFA947;
+}
+
+.info-popup-icon  {
+  color: #10222F;
+}
+
+.message-popup:hover {
   background: #eee;
 }
 
@@ -382,22 +404,50 @@
   overflow-y: auto;
 }
 
-.notifications-error {
+.notification {
   width: 98%;
   display: grid;
   grid-template-columns: 9fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
   gap: 0 0;
   grid-template-areas:
-          "error-title error-icon"
-          "error-msg error-icon"
-          "error-timestamp error-icon";
+          "notification-title notification-icon"
+          "notification-msg notification-icon"
+          "notification-timestamp notification-icon";
   border-radius: 6px;
+  margin-top: 1%;
+}
+
+.notifications-error {
   border: 2px solid #CD0000;
+}
+
+.notifications-warning {
+  border: 2px solid #FFA947;
+}
+
+.notifications-info {
+  border: 2px solid #10222F;
 }
 
 .error-icon{
   color: #CD0000;
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warning-icon{
+  color: #FFA947;
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-icon{
+  color: #10222F;
   font-size: 3rem;
   display: flex;
   align-items: center;

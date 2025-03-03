@@ -12,7 +12,8 @@
         formatSelectedDueDate,
         updateAssignment,
         updateAssignmentsSorting,
-        deleteAssignment
+        deleteAssignment,
+        newNotificationTA
     } from '$lib/js/home/assignments.js';
     import {
         getCurrentDate,
@@ -26,8 +27,11 @@
         handleNewEventClick,
         addEvent,
         getDateEvents,
-        deleteEvent
+        deleteEvent,
+        newNotificationTC
     } from "$lib/js/home/calendar.js";
+    import {notifications, addNotification, clearNotifications} from "$lib/js/notifictions.js";
+    import {getFullCurrentDate} from "$lib/js/utils.js";
 
     const authToken = getAuthToken();
 
@@ -37,8 +41,63 @@
     let email = '';
 
     let displayUserCard = false;
+    let displayNotifications = false;
+
+    let messageQueue = [];
+    let displayMessage = false;
+    let popupMessage = '';
+    let popupType = '';
+
+    /**
+     * Adds a new notification to the notification queue and displays it immediately if the queue was previously empty
+     *
+     * The notification will be added to the top of the queue and will be displayed immediately if the queue was previously empty.
+     * If the queue was not empty, the notification will be added to the top of the queue and will be displayed once the previous message has been displayed for 5 seconds.
+     *
+     * @function newNotificationNotes
+     * @param {string} type - The type of the notification. Can be "error", "warning", or "info".
+     * @param {string} title - The title of the notification.
+     * @param {string} message - The message of the notification.
+     */
+    function newNotification(type, title, message) {
+        addNotification(type, title, message, getFullCurrentDate());
+
+        messageQueue.push({type, title, message});
+        if (!displayMessage) {
+            showNextMessage();
+        }
+    }
+
+    // Pass newNotification function to external js files
+    newNotificationTC(newNotification);
+    newNotificationTA(newNotification);
+
+    /**
+     * Displays the next message in the queue, or does nothing if the queue is empty
+     *
+     * When called, the function will display the next message in the queue and start a timer.
+     * When the timer expires, the function will hide the current message and call itself again.
+     *
+     * @function showNextMessage
+     */
+    function showNextMessage() {
+        if (messageQueue.length === 0) return;
+
+        const nextMessage = messageQueue.shift();
+        popupMessage = nextMessage.title;
+        popupType = nextMessage.type;
+        displayMessage = true;
+
+        setTimeout(() => {
+            displayMessage = false;
+            showNextMessage();
+        }, 5000);
+    }
 
     onMount(async () => {
+        // Clear notifications:
+        clearNotifications();
+
         selectedMonth = monthSelectOptions[0];
 
         currentDateDisplay = getFormattedCurrentDate();
@@ -53,19 +112,6 @@
         profilePicture = await getProfilePic(authToken);
         assignments.set(await getAssignments(authToken, sortType));
     });
-
-    // Error handling
-    let timeout;
-    let error = '';
-    function showErrorMsg(err) {
-        if (err) {
-            error = err;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                error = '';
-            }, 5000);
-        }
-    }
 
     // Runes
     $: sortType, assignments.set(updateAssignmentsSorting($assignments, sortType));
@@ -295,8 +341,6 @@
             newEventName = '';
             eventIsEditing = false;
         }
-
-        // TODO: Implement error handling
     }
 
     /**
@@ -573,7 +617,7 @@
             <button class="card-fab">
                 <span class="material-symbols-rounded">settings</span>
             </button>
-            <button class="card-fab">
+            <button class="card-fab" on:click={() => {displayNotifications = true; displayUserCard = false}}>
                 <span class="material-symbols-rounded">notifications</span>
             </button>
             <button class="card-fab">
@@ -589,26 +633,50 @@
     </div>
 {/if}
 
-<div class="notifications">
-    <div class="notifications-header">
-        <h2 class="notifications-title">Notifications</h2>
-        <button class="notifications-close"><span class="material-symbols-rounded">remove</span></button>
-    </div>
-    <button class="notifications-clear"><span class="material-symbols-rounded">delete</span> Clear</button>
-    <div class="notifications-list">
-        <div class="notifications-error">
-            <h3 class="notification-error-title notifications-content" style="grid-area: error-title;">Error while loading your assignments:</h3>
-            <p class="notifications-error-message notifications-content" style="grid-area: error-msg;">More Detailed error message returned from the API!</p>
-            <p class="notifications-error-timestamp notifications-content" style="grid-area: error-timestamp;">02.03.2025</p>
-            <span class="material-symbols-rounded error-icon" style="grid-area: error-icon;">error</span>
+{#if displayNotifications}
+    <div class="notifications">
+        <div class="notifications-header">
+            <h2 class="notifications-title">Notifications</h2>
+            <button class="notifications-close" on:click={displayNotifications = false}><span class="material-symbols-rounded">remove</span></button>
+        </div>
+        {#if $notifications.length > 0}
+            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span class="material-symbols-rounded">delete</span> Clear</button>
+        {/if}
+        <div class="notifications-list">
+            {#each $notifications as notification}
+                {#if notification.type === "error"}
+                    <div class="notification notifications-error">
+                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded error-icon" style="grid-area: notification-icon;">error</span>
+                    </div>
+                {:else if notification.type === "warning"}
+                    <div class="notification notifications-warning">
+                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded warning-icon" style="grid-area: notification-icon;">warning</span>
+                    </div>
+                {:else if notification.type === "info"}
+                    <div class="notification notifications-info">
+                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded info-icon" style="grid-area: notification-icon;">info</span>
+                    </div>
+                {/if}
+            {/each}
         </div>
     </div>
-</div>
+{/if}
 
-<!--<button class="error-popup">-->
-<!--    <h1 class="error-message">Error while loading assignments</h1>-->
-<!--    <span class="material-symbols-rounded">error</span>-->
-<!--</button>-->
+{#if displayMessage}
+    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}">
+        <h1 class="popup-message">{popupMessage}</h1>
+        <span class="material-symbols-rounded {popupType === 'error' ? 'error-popup-icon' : popupType === 'warning' ? 'warning-popup-icon' : 'info-popup-icon'}">{popupType === "error" ? "error" : popupType === "warning" ? "warning" : "info"}</span>
+    </button>
+{/if}
 
 <style>
     @import "$lib/style/global.css";

@@ -9,12 +9,16 @@
         deleteFolder,
         createNote,
         createFolder,
-        renameFVItem
+        renameFVItem,
+        newNotificationTFV,
     } from "$lib/js/notes/fileViewer.js";
     import {
         updateNote,
         getNote,
+        newNotificationTNE,
     } from "$lib/js/notes/noteEditor.js";
+    import {notifications, addNotification, clearNotifications} from "$lib/js/notifictions.js";
+    import {getFullCurrentDate} from "$lib/js/utils.js";
 
     const authToken = getAuthToken();
 
@@ -24,8 +28,62 @@
     let email = '';
 
     let displayUserCard = false;
+    let displayNotifications = false;
+
+    let messageQueue = [];
+    let displayMessage = false;
+    let popupMessage = '';
+    let popupType = '';
+
+    /**
+     * Adds a new notification to the notification queue and displays it immediately if the queue was previously empty
+     *
+     * The notification will be added to the top of the queue and will be displayed immediately if the queue was previously empty.
+     * If the queue was not empty, the notification will be added to the top of the queue and will be displayed once the previous message has been displayed for 5 seconds.
+     *
+     * @function newNotificationNotes
+     * @param {string} type - The type of the notification. Can be "error", "warning", or "info".
+     * @param {string} title - The title of the notification.
+     * @param {string} message - The message of the notification.
+     */
+    function newNotificationNotes(type, title, message) {
+        addNotification(type, title, message, getFullCurrentDate());
+
+        messageQueue.push({type, title, message});
+        if (!displayMessage) {
+            showNextMessage();
+        }
+    }
+
+    // Export newNotification function to external js files
+    newNotificationTFV(newNotificationNotes);
+    newNotificationTNE(newNotificationNotes);
+
+    /**
+     * Displays the next message in the queue, or does nothing if the queue is empty
+     *
+     * When called, the function will display the next message in the queue and start a timer.
+     * When the timer expires, the function will hide the current message and call itself again.
+     *
+     * @function showNextMessage
+     */
+    function showNextMessage() {
+        if (messageQueue.length === 0) return;
+
+        const nextMessage = messageQueue.shift();
+        popupMessage = nextMessage.title;
+        popupType = nextMessage.type;
+        displayMessage = true;
+
+        setTimeout(() => {
+            displayMessage = false;
+            showNextMessage();
+        }, 5000);
+    }
 
     onMount(async () => {
+        clearNotifications();
+
         let userData = await getUserData(authToken);
         username = userData.username;
         email = userData.email;
@@ -35,20 +93,6 @@
         await refreshFV("root");
         document.addEventListener("click", closeFVContextMenu);
     });
-
-    // Error handling
-    let error = '';
-    let timeout;
-
-    function showErrorMsg(err) {
-        if (err) {
-            error = err;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                error = '';
-            }, 5000);
-        }
-    }
 
     // Notes
 
@@ -100,9 +144,7 @@
             path = [...path, folder];
         }
 
-        let fvItems = await getFVItems(folder, path, authToken);
-        folders = fvItems.folders;
-        files = fvItems.files;
+        await refreshFV(folder);
     }
 
     /**
@@ -134,9 +176,7 @@
     async function navigateTo(index, folder) {
         path = path.slice(0, index + 1);
 
-        let fvItems = await getFVItems(folder, path, authToken);
-        folders = fvItems.folders;
-        files = fvItems.files;
+        await refreshFV(folder);
     }
 
     /**
@@ -569,6 +609,44 @@
     </div>
 </div>
 
+{#if displayNotifications}
+    <div class="notifications">
+        <div class="notifications-header">
+            <h2 class="notifications-title">Notifications</h2>
+            <button class="notifications-close" on:click={displayNotifications = false}><span class="material-symbols-rounded">remove</span></button>
+        </div>
+        {#if $notifications.length > 0}
+            <button class="notifications-clear" on:click={() => {clearNotifications()}}><span class="material-symbols-rounded">delete</span> Clear</button>
+        {/if}
+        <div class="notifications-list">
+            {#each $notifications as notification}
+                {#if notification.type === "error"}
+                    <div class="notification notifications-error">
+                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded error-icon" style="grid-area: notification-icon;">error</span>
+                    </div>
+                {:else if notification.type === "warning"}
+                    <div class="notification notifications-warning">
+                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded warning-icon" style="grid-area: notification-icon;">warning</span>
+                    </div>
+                {:else if notification.type === "info"}
+                    <div class="notification notifications-info">
+                        <h3 class="notification-title notifications-content" style="grid-area: notification-title;">{notification.title}:</h3>
+                        <p class="notifications-message notifications-content" style="grid-area: notification-msg;">{notification.message}</p>
+                        <p class="notifications-timestamp notifications-content" style="grid-area: notification-timestamp;">{notification.timestamp}</p>
+                        <span class="material-symbols-rounded info-icon" style="grid-area: notification-icon;">info</span>
+                    </div>
+                {/if}
+            {/each}
+        </div>
+    </div>
+{/if}
+
 {#if isRenamingItem}
     <div class="modal-block">
         <div class="modal rename-modal">
@@ -617,6 +695,9 @@
             <button class="card-fab">
                 <span class="material-symbols-rounded">settings</span>
             </button>
+            <button class="card-fab" on:click={() => {displayNotifications = true; displayUserCard = false}}>
+                <span class="material-symbols-rounded">notifications</span>
+            </button>
             <button class="card-fab">
                 <span class="material-symbols-rounded">logout</span>
             </button>
@@ -630,10 +711,11 @@
     </div>
 {/if}
 
-{#if error}
-    <div class="error-wrapper">
-        <h1 class="error">{error}</h1>
-    </div>
+{#if displayMessage}
+    <button class="message-popup {popupType === 'error' ? 'error-popup' : popupType === 'warning' ? 'warning-popup' : 'info-popup'}">
+        <h1 class="popup-message">{popupMessage}</h1>
+        <span class="material-symbols-rounded {popupType === 'error' ? 'error-popup-icon' : popupType === 'warning' ? 'warning-popup-icon' : 'info-popup-icon'}">{popupType === "error" ? "error" : popupType === "warning" ? "warning" : "info"}</span>
+    </button>
 {/if}
 
 <style>

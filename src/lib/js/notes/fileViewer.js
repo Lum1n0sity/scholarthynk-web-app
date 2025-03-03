@@ -1,3 +1,13 @@
+import {logout} from "$lib/js/auth.js";
+
+let newNotification = null;
+
+export function newNotificationTFV(callback) {
+    if (callback) {
+        newNotification = callback;
+    }
+}
+
 /**
  * Fetches the items in the file viewer.
  * @param {string} folder the name of the folder to fetch items from
@@ -18,26 +28,24 @@ export async function getFVItems(folder, path, authToken) {
 
         if (response.status === 200) {
             const data = await response.json();
+
+            if (data.folders.length === 0 && data.files.length === 0) {
+                newNotification("warning", "No items found", "There are no items in this folder.");
+            }
+
             return {folders: data.folders, files: data.files};
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while loading items", await response.json().error);
+            return {folders: [], files: []};
         } else {
-            // showErrorMsg('Unable to fetch file viewer items.');
-            // Implement error handling
+            newNotification("error", "Unable to create new folder", "There was an unexpected error. Please try again!");
             return {folders: [], files: []};
         }
     }
-}
-
-/**
- * Open a folder in the file viewer.
- * @param {string} folder the name of the folder to be opened
- * @param {string[]} path the path to the parent folder
- * @returns {Promise<string[]>} the new path to the folder
- */
-export async function openFolder(folder, path) {
-    if (folder !== "root") {
-        return [...path, folder];
-    }
-    return folder;
 }
 
 /**
@@ -59,11 +67,22 @@ export async function deleteFolder(selectedItemName, path, authToken) {
         });
 
         if (response.status === 200) {
-            // await getFVItems(path[path.length - 1]);
             return true;
+        } else if (response.status === 400) {
+            newNotification("error", "Invalid item", await response.json().error);
+            return false;
+        } else if (response.status === 404) {
+            newNotification("error", "Error while deleting item", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while deleting item", await response.json().error);
+            return false;
         } else {
-            // showErrorMsg('Unable to delete item.');
-            // TODO: Implement error handling
+            newNotification("error", "Unable to create new folder", "There was an unexpected error. Please try again!");
             return false;
         }
     }
@@ -78,8 +97,6 @@ export async function deleteFolder(selectedItemName, path, authToken) {
  */
 export async function createFolder(newFolderName, path, authToken) {
     if (authToken) {
-        console.log(path, newFolderName);
-
         const response = await fetch('http://127.0.0.1:3000/api/create-folder', {
             method: 'POST',
             headers: {
@@ -91,16 +108,21 @@ export async function createFolder(newFolderName, path, authToken) {
 
         if (response.status === 200) {
             return true;
-            // cancelNewFolder();
-            // await getFVItems(path[path.length - 1]);
         } else if (response.status === 400) {
-            // showErrorMsg('Folder name cannot be empty.');
+            newNotification("error", "Error while creating new folder", await response.json().error);
             return false;
         } else if (response.status === 409) {
-            // showErrorMsg('Folder already exists.');
+            newNotification("error", "Error while creating new folder", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while creating new folder", await response.json().error);
             return false;
         } else {
-            // showErrorMsg('Unable to create folder.');
+            newNotification("error", "Unable to create new folder", "There was an unexpected error. Please try again!");
             return false;
         }
     }
@@ -125,9 +147,18 @@ export async function createNote(path, authToken) {
 
         if (response.status === 200) {
             return true;
-            // await openNote("Untitled", true);
+        } else if (response.status === 400) {
+            newNotification("error", "Error while creating new note", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while creating new note", await response.json().error);
+            return false;
         } else {
-            // showErrorMsg('Unable to create note.');
+            newNotification("error", "Unable to create new note", "There was an unexpected error. Please try again!");
             return false;
         }
     }
@@ -144,14 +175,12 @@ export async function createNote(path, authToken) {
 export async function renameFVItem(newItemName, selectedItem, path, authToken) {
     if (authToken) {
         if (newItemName === "") {
-            // showErrorMsg("New name cannot be empty!");
-            // closeModal("renameItem");
+            newNotification("error", "Invalid name", "New name cannot be empty!");
             return false;
         }
 
         if (newItemName === selectedItem) {
-            // showErrorMsg("New name cannot be the same as the old name!");
-            // closeModal("renameItem");
+            newNotification("error", "Invalid name", "New name cannot be the same as the old name.");
             return false;
         }
 
@@ -172,10 +201,20 @@ export async function renameFVItem(newItemName, selectedItem, path, authToken) {
 
             return true;
         } else if (response.status === 400) {
-            // showErrorMsg(await response.json().error);
+            newNotification("error", "Invalid name", await response.json().error);
+            return false;
+        } else if (response.status === 404) {
+            newNotification("error", "Item not found", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while renaming item", await response.json().error);
             return false;
         } else {
-            // showErrorMsg('Unable to rename item.');
+            newNotification("error", "Unable to rename item", "There was an unexpected error. Please try again!");
             return false;
         }
     }

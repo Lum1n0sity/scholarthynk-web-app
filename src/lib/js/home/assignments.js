@@ -1,6 +1,26 @@
+import {logout} from "$lib/js/auth.js";
 import {writable} from "svelte/store";
 
 let expandedAssignment = null;
+
+let newNotification = null;
+
+/**
+ * Sets the callback function for the new notification system.
+ *
+ * The callback function should accept 3 parameters: type, title, and message.
+ * The type parameter should be one of "error", "warning", or "info".
+ * The title and message parameters are the title and message of the notification to be displayed.
+ *
+ * If called with a falsy value, the callback function will not be changed.
+ *
+ * @param {Function} callback - The callback function to be called when a new notification is to be displayed.
+ */
+export function newNotificationTA(callback) {
+    if (callback) {
+        newNotification = callback;
+    }
+}
 
 export const newAssignmentData = writable({
     title: "",
@@ -28,9 +48,15 @@ export async function getAssignments(authToken, sortType) {
         if (response.status === 200) {
             const data = await response.json();
             return updateAssignmentsSorting(data.assignments, sortType);
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return [];
+        } else if (response.status === 500) {
+            newNotification("error", "Error while loading assignments", await response.json().error);
+            return [];
         } else {
-            // showErrorMsg('Unable to fetch assignments.');
-            // Add error log update
+            newNotification("error", "Unable to load assignments", "There was an unexpected error. Please try again!");
             return [];
         }
     }
@@ -83,9 +109,21 @@ export async function addAssignment(authToken, e) {
                     description: ""
                 });
                 return false;
+            } else if (response.status === 400) {
+                newNotification("error", "Invalid assignment", await response.json().error);
+                return false;
+            } else if (response.status === 409) {
+                newNotification("error", "Assignment already exists", await response.json().error);
+                return false;
+            } else if (response.status === 401) {
+                newNotification("error", "Unauthorized", await response.json().error);
+                setTimeout(() => {logout();}, 5000);
+                return false;
+            } else if (response.status === 500) {
+                newNotification("error", "Error while adding assignment", await response.json().error);
+                return false;
             } else {
-                // return 'Unable to add assignment.';
-                // Add error log update
+                newNotification("error", "Unable to add assignment", "There was an unexpected error. Please try again!");
                 return true;
             }
         }
@@ -115,9 +153,18 @@ export async function updateAssignment(authToken, assignment) {
 
         if (response.status === 200) {
             return true;
+        } else if (response.status === 404) {
+            newNotification("error", "Assignment not found", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while updating your assignment", await response.json().error);
+            return false;
         } else {
-            // showErrorMsg('Unable to update assignment.');
-            // Add error log update
+            newNotification("error", "Unable to update assignment", "There was an unexpected error. Please try again!");
             return false;
         }
     }
@@ -129,6 +176,7 @@ export async function updateAssignment(authToken, assignment) {
  * @param authToken
  * @param {number} index The index of the assignment in the `assignments` store.
  *
+ * @param assignments
  * @returns {Promise<void>}
  */
 export async function deleteAssignment(authToken, index, assignments) {
@@ -144,9 +192,18 @@ export async function deleteAssignment(authToken, index, assignments) {
 
         if (response.status === 200) {
             return true;
+        } else if (response.status === 404) {
+            newNotification("error", "Assignment not found", await response.json().error);
+            return false;
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return false;
+        } else if (response.status === 500) {
+            newNotification("error", "Error while deleting your assignment", await response.json().error);
+            return false;
         } else {
-            // showErrorMsg('Unable to delete assignment.');
-            // Add error log update
+            newNotification("error", "Unable to update assignment", "There was an unexpected error. Please try again!");
             return false;
         }
     }
@@ -181,6 +238,16 @@ export function updateAssignmentsSorting(assignments, sortType) {
     if (sortType === "subject") {
         sortedAssignments.sort((a, b) => a.subject.localeCompare(b.subject));
     } else if (sortType === "date") {
+        /**
+         * Takes a date string in the format "DD.MM.YYYY" and returns a
+         * corresponding Date object.
+         *
+         * @param {string} dateString - The date string to parse.
+         * @returns {Date} The parsed Date object.
+         *
+         * @example
+         * parseDate("01.01.2020") // => Date('2020-01-01')
+         */
         const parseDate = (dateString) => {
             const [day, month, year] = dateString.split(".");
             return new Date(`${year}-${month}-${day}`);

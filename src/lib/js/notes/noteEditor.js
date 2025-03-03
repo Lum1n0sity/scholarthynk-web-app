@@ -1,3 +1,13 @@
+import {logout} from "$lib/js/auth.js";
+
+let newNotification = null;
+
+export function newNotificationTNE(callback) {
+    if (callback) {
+        newNotification = callback;
+    }
+}
+
 /**
  * Updates a note in the database with the given title and content.
  * @param {string} authToken The authentication token to use for the request.
@@ -19,9 +29,21 @@ export async function updateNote(authToken, noteTitle, originalTitle, noteConten
             body: JSON.stringify({title: noteTitle, oldTitle: originalTitle, content: noteContent, path: path})
         });
 
-        if (response.status !== 200) {
-            // showErrorMsg('Unable to update note.');
-            // TODO: Implement error handling
+        if (response.status === 400) {
+            newNotification("error", "Error while renaming note", await response.json().error);
+            return {};
+        } else if (response.status === 404) {
+            newNotification("error", "Unable to find note", await response.json().error);
+            return {};
+        } else if (response.status === 500) {
+            newNotification("error", "Error while updating note", await response.json().error);
+            return {};
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return {};
+        } else if (response.status !== 200) {
+            newNotification("error", "Unable to update note", "There was an unexpected error. Please try again!");
             return {};
         }
 
@@ -56,8 +78,18 @@ export async function getNote(authToken, path, title, isNewNote) {
 
             let satistics = calculateNoteStatistics(data.note.fileContent);
             return {noteTitle: data.note.name, noteContent: data.note.fileContent, statistics: satistics};
+        } else if (response.status === 404) {
+            newNotification("error", "Unable to find note", await response.json().error);
+            return {};
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return {};
+        } else if (response.status === 500) {
+            newNotification("error", "Error while loading note", await response.json().error);
+            return {};
         } else {
-            // if (!isNewNote) showErrorMsg('Unable to load note.');
+            newNotification("error", "Unable to load note", "There was an unexpected error. Please try again!");
             return {};
         }
     }
@@ -71,6 +103,11 @@ export async function getNote(authToken, path, title, isNewNote) {
 function calculateNoteStatistics(content) {
     let wordCount = content.trim().split(/\s+/).length;
     let characterCount = content.length;
+
+    if (wordCount.length === 0 || characterCount.length === 0) {
+        newNotification("warning", "Unable to calculate statistics", "There were no words or characters in this note.");
+        return {wordCount: 0, characterCount: 0};
+    }
 
     return {wordCount: wordCount, characterCount: characterCount}
 }

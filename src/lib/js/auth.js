@@ -36,3 +36,11 @@ export function setAuthToken(token) {
     }
     authToken.set(token);
 }
+
+export function logout() {
+    if (browser) {
+        localStorage.removeItem('authToken');
+    }
+
+    window.location.href = '/login';
+}
