@@ -1,3 +1,5 @@
+import {logout} from "$lib/js/auth.js";
+
 const currentDate = new Date();
 
 let newNotification = null;

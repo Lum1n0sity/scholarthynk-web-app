@@ -203,7 +203,7 @@ export async function deleteAssignment(authToken, index, assignments) {
             newNotification("error", "Error while deleting your assignment", await response.json().error);
             return false;
         } else {
-            newNotification("error", "Unable to update assignment", "There was an unexpected error. Please try again!");
+            newNotification("error", "Unable to delete assignment", "There was an unexpected error. Please try again!");
             return false;
         }
     }

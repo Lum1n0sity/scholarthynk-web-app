@@ -42,7 +42,7 @@ export async function getFVItems(folder, path, authToken) {
             newNotification("error", "Error while loading items", await response.json().error);
             return {folders: [], files: []};
         } else {
-            newNotification("error", "Unable to create new folder", "There was an unexpected error. Please try again!");
+            newNotification("error", "Unable to load items", "There was an unexpected error. Please try again!");
             return {folders: [], files: []};
         }
     }
@@ -82,7 +82,7 @@ export async function deleteFolder(selectedItemName, path, authToken) {
             newNotification("error", "Error while deleting item", await response.json().error);
             return false;
         } else {
-            newNotification("error", "Unable to create new folder", "There was an unexpected error. Please try again!");
+            newNotification("error", "Unable to delete item", "There was an unexpected error. Please try again!");
             return false;
         }
     }

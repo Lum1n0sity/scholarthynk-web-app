@@ -148,7 +148,7 @@
      * file, and its height and width are set to 100%. If no file is selected, an
      * error message is displayed.
      */
-    function handleFileChange() {
+    function handleFileChange(event) {
         file = event.target.files[0];
         if (file) {
             imgWrapper.innerHTML = '';
@@ -200,46 +200,50 @@
      */
     async function skipProfilePic() {
         if (imgWrapper && imgWrapper.firstChild) {
-            const canvas = imgWrapper.firstChild;
+            const firstEL = imgWrapper.firstChild;
+            if (firstEL instanceof HTMLCanvasElement) {
+                const dataUrl = firstEL.toDataURL('image/png');
 
-            const dataURL = canvas.toDataURL('image/png');
-            const blob = dataURLToBlob(dataURL);
+                const blob = dataURLToBlob(dataUrl);
 
-            if (!blob) {
-                showErrorMsg('Profile picture cannot be empty');
-                return;
-            }
-
-            if (!userId) {
-                showErrorMsg('Unauthorized!');
-                await continueDeleteHandler();
-                setTimeout(() => {logout();}, 5000);
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('profilePic', blob);
-            formData.append('userId', userId);
-
-            try {
-                const authToken = browser ? localStorage.getItem('authToken') : null;
-
-                const response = await fetch('http://localhost:3000/api/upload-profile-pic', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                    },
-                    body: formData,
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    window.location.href = '/home';
-                } else {
-                    showErrorMsg(data.error);
+                if (!blob) {
+                    showErrorMsg('Profile picture cannot be empty');
+                    return;
                 }
-            } catch (error) {
-                showErrorMsg(error);
+
+                if (!userId) {
+                    showErrorMsg('Unauthorized!');
+                    await continueDeleteHandler();
+                    setTimeout(() => {logout();}, 5000);
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('profilePic', blob);
+                formData.append('userId', userId);
+
+                try {
+                    const authToken = browser ? localStorage.getItem('authToken') : null;
+
+                    const response = await fetch('http://localhost:3000/api/upload-profile-pic', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                        },
+                        body: formData,
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = '/home';
+                    } else {
+                        showErrorMsg(data.error);
+                    }
+                } catch (error) {
+                    showErrorMsg(error);
+                }
+            } else {
+                showErrorMsg("Unexpected error");
             }
         } else {
             showErrorMsg("Unexpected error!");
@@ -462,7 +466,7 @@
                 <button class="button continue continue-profile-pic" on:click={continueProfilePic}><p>Continue</p> <span
                         class="material-symbols-rounded">arrow_forward</span></button>
             </div>
-            <input type="file" bind:this={fileInput} on:change={handleFileChange} style="display: none;"/>
+            <input type="file" bind:this={fileInput} on:change={(event) => {handleFileChange(event);}} style="display: none;"/>
         </div>
     {/if}
 </div>

@@ -30,7 +30,7 @@
         deleteEvent,
         newNotificationTC
     } from "$lib/js/home/calendar.js";
-    import {notifications, addNotification, clearNotifications} from "$lib/js/notifictions.js";
+    import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
 
     const authToken = getAuthToken();

@@ -104,9 +104,8 @@ function calculateNoteStatistics(content) {
     let wordCount = content.trim().split(/\s+/).length;
     let characterCount = content.length;
 
-    if (wordCount.length === 0 || characterCount.length === 0) {
+    if (wordCount === 0 || characterCount === 0) {
         newNotification("warning", "Unable to calculate statistics", "There were no words or characters in this note.");
-        return {wordCount: 0, characterCount: 0};
     }
 
     return {wordCount: wordCount, characterCount: characterCount}

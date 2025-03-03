@@ -17,7 +17,7 @@
         getNote,
         newNotificationTNE,
     } from "$lib/js/notes/noteEditor.js";
-    import {notifications, addNotification, clearNotifications} from "$lib/js/notifictions.js";
+    import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
 
     const authToken = getAuthToken();

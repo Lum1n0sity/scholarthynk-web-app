@@ -16,8 +16,7 @@ export const notifications = writable([]);
  */
 export function addNotification(type, title, message, timestamp) {
     notifications.update((notifications) => {
-        notifications.push({type, title, message, timestamp});
-        return notifications;
+        return [{type, title, message, timestamp}, ...notifications];
     });
 }
 
