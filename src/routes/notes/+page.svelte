@@ -2,7 +2,7 @@
     import logo from '$lib/assets/logo.svg';
     import {onMount} from 'svelte';
     // import DOMPurify from 'dompurify';
-    import {getAuthToken} from "$lib/js/auth.js";
+    import {getAuthToken, logout} from "$lib/js/auth.js";
     import {getUserData, getProfilePic, displayUserCardHandler} from "$lib/js/user.js";
     import {
         getFVItems,
@@ -720,7 +720,7 @@
                     on:click={() => {displayNotifications = true; displayUserCard = false; displayNewNotification = false; displayMessage = false;}}>
                 <span class="material-symbols-rounded">{displayNewNotification ? 'notifications_unread' : 'notifications'}</span>
             </button>
-            <button class="card-fab">
+            <button class="card-fab" on:click={logout}>
                 <span class="material-symbols-rounded">logout</span>
             </button>
         </div>
