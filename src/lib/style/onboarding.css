@@ -181,6 +181,7 @@ label {
   outline: none;
   color: #E65A41;
   font-weight: bold;
+  margin-left: auto;
 }
 
 .continue p {
