@@ -150,6 +150,16 @@
      */
     function handleFileChange(event) {
         file = event.target.files[0];
+
+        const allowedTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+
+        let isFileTypeValid = allowedTypes.includes(file.type);
+
+        if (!isFileTypeValid) {
+            showErrorMsg('Invalid file type');
+            return;
+        }
+
         if (file) {
             imgWrapper.innerHTML = '';
             const img = document.createElement('img');
@@ -295,8 +305,7 @@
                 showErrorMsg(error);
             }
         } else {
-            showErrorMsg('Profile picture cannot be empty');
-            setTimeout(async () => {await skipProfilePic();}, 5000);
+            await skipProfilePic();
         }
     }
 
@@ -461,7 +470,6 @@
             <div class="img-wrapper" bind:this={imgWrapper}>
             </div>
             <div class="button-wrapper profile-pic-btn-wrapper">
-                <button class="button skip" on:click={skipProfilePic}>Skip</button>
                 <button class="button upload" on:click={selectProfilePic}>Upload</button>
                 <button class="button continue continue-profile-pic" on:click={continueProfilePic}><p>Continue</p> <span
                         class="material-symbols-rounded">arrow_forward</span></button>
