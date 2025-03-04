@@ -32,7 +32,7 @@ export function newNotificationNDM(callback) {
  * Retrieves the path of a note, given its parent folder.
  *
  * @param {string} parent The name of the parent folder.
- * @param noteId
+ * @param {string} noteId The unique identifier of the note.
  * @returns {Promise<string[]>} The path of the note as an array of strings.
  */
 export async function getNotePath(parent, noteId) {
