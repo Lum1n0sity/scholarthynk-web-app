@@ -100,7 +100,7 @@ export async function getNote(authToken, path, title, isNewNote) {
  * @param {string} content The content of the note.
  * @returns {Object} An object containing the word count and character count.
  */
-function calculateNoteStatistics(content) {
+export function calculateNoteStatistics(content) {
     let wordCount = content.trim().split(/\s+/).length;
     let characterCount = content.length;
 

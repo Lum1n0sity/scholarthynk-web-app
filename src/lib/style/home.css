@@ -47,110 +47,74 @@
   background-color: #fff;
 }
 
-.notes-list {
+.note-list {
+  margin-top: 5%;
+  width: 90%;
+  height: 55%;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 90%;
-  height: 60%;
-  overflow-y: auto;
-  margin-top: 2%;
 }
 
-.notes-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.notes-list::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 8px;
-}
-
-.notes-list::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.notes-list::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-.notes-list-item {
+.note-list-item {
   width: 100%;
-  height: 25%;
+  height: 5vh;
+  border-radius: 6px;
+  border: 1px solid #B6B6B6;
+  outline: none;
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 3px solid #C2C2C2;
   cursor: pointer;
+  padding: 0 1%;
+  margin: 1% 0;
+  background: transparent;
+  transition: .5s;
 }
 
-.notes-list-item:hover {
+.note-list-item-title {
+  width: -webkit-fill-available;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.note-list-item:hover {
   background-color: #eeeeee;
 }
 
-.notes-list-item p {
-  color: #000;
-  font-weight: bold;
-  font-size: 1.5rem;
-}
-
-.note-title {
+.note-btn-wrapper {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-left: 5%;
+  height: 15%;
   width: 50%;
+  margin-top: 2.5%;
 }
 
-.button-wrapper {
+.note-button {
+  text-decoration: none;
+  color: #fff;
+  background: #E65A41;
+  border-radius: 6px;
+  padding: 0 1vw;
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: .5s;
+  height: 80%;
   display: flex;
   align-items: center;
-  width: 70%;
-  height: 20%;
-  margin-right: auto;
-  margin-left: 3.7%;
-  justify-content: space-evenly;
-}
-
-.view-all-notes {
-  width: 40%;
-  height: 80%;
+  justify-content: center;
+  margin: 1%;
   border: none;
   outline: none;
-  background-color: #E65A41;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 2rem;
-  font-weight: bold;
-  cursor: pointer;
 }
 
-.add-note {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 55%;
-  height: 80%;
-  border: none;
-  outline: none;
-  background-color: #E65A41;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 2rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.add-note span {
-  font-size: 3rem;
-  margin-left: 2%;
-}
-
-.add-note p {
-  width: 100%;
-  text-align: center;
-}
-
-.button-wrapper button:hover {
+.note-button:hover {
   background-color: #C94F3F;
 }
 

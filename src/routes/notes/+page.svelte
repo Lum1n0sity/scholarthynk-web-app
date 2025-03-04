@@ -17,6 +17,7 @@
         getNote,
         newNotificationTNE,
     } from "$lib/js/notes/noteEditor.js";
+    import {openNoteExternal, noteTitleExternal, noteContentExternal, noteWordCountExternal, noteCharacterCountExternal, notePathExternal, newNotificationNDM} from "$lib/js/notes/noteDisplayManager.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
 
@@ -61,6 +62,7 @@
     // Export newNotification function to external js files
     newNotificationTFV(newNotificationNotes);
     newNotificationTNE(newNotificationNotes);
+    newNotificationNDM(newNotificationNotes);
 
     /**
      * Displays the next message in the queue, or does nothing if the queue is empty
@@ -85,8 +87,6 @@
     }
 
     onMount(async () => {
-        clearNotifications();
-
         let userData = await getUserData(authToken);
         username = userData.username;
         email = userData.email;
@@ -95,6 +95,10 @@
 
         await refreshFV("root");
         document.addEventListener("click", closeFVContextMenu);
+
+        // Load noteContent into note editor
+        // This is for when the user opens a note from the dashboard
+        noteEditor.innerHTML = noteContent;
     });
 
     // Notes
@@ -130,6 +134,25 @@
     let characterCount;
 
     $: displayedView, refreshFV(path[path.length - 1]);
+    $: {
+        console.log($openNoteExternal);
+        if ($openNoteExternal) externalLoadNote()
+    };
+
+    function externalLoadNote() {
+        displayedView = "editor";
+
+        console.log("Help");
+
+        originalTitle = $noteTitleExternal;
+        noteTitle = $noteTitleExternal;
+        noteContent = $noteContentExternal;
+
+        wordCount = $noteWordCountExternal;
+        characterCount = $noteCharacterCountExternal;
+
+        openNoteExternal.set(false);
+    }
 
     /**
      * Opens a folder in the file viewer.

@@ -31,7 +31,9 @@
         newNotificationTC
     } from "$lib/js/home/calendar.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
-    import {getFullCurrentDate} from "$lib/js/utils.js";
+    import {getFullCurrentDate, formatDate} from "$lib/js/utils.js";
+    import {getRecentNotes, newNotificationTN} from '$lib/js/home/notes.js';
+    import {externalOpenNote, newNotificationNDM, getNotePath} from "$lib/js/notes/noteDisplayManager.js";
 
     const authToken = getAuthToken();
 
@@ -74,6 +76,8 @@
     // Pass newNotification function to external js files
     newNotificationTC(newNotification);
     newNotificationTA(newNotification);
+    newNotificationTN(newNotification);
+    newNotificationNDM(newNotification);
 
     /**
      * Displays the next message in the queue, or does nothing if the queue is empty
@@ -98,9 +102,6 @@
     }
 
     onMount(async () => {
-        // Clear notifications:
-        clearNotifications();
-
         selectedMonth = monthSelectOptions[0];
 
         currentDateDisplay = getFormattedCurrentDate();
@@ -114,6 +115,8 @@
 
         profilePicture = await getProfilePic(authToken);
         assignments.set(await getAssignments(authToken, sortType));
+
+        recentNotes = await getRecentNotes(authToken);
     });
 
     // Runes
@@ -123,6 +126,8 @@
     $: if (!isAddingAssignment) getAssignmentsHelper(authToken);
 
     $: selectedMonth, updateCalendarHelper();
+
+    let recentNotes = [];
 
     let assignments = writable([]);
 
@@ -392,7 +397,7 @@
         }
     }
 </script>
-
+<!--externalOpenNote(note.name, note.content, getNotePath(note.parentFolder));-->
 <div class="body">
     <div class="nav-bar">
         <div class="logo">
@@ -411,16 +416,17 @@
     <div class="dashboard-content">
         <div class="recent-notes" style="grid-area: box-1">
             <h1 class="section-title">Recent Notes</h1>
-            <div class="notes-list">
-                <div class="notes-list-item">
-                    <p class="note-title">Study Tips for Final Exams</p>
-                    <p>02.01.2025</p>
-                </div>
+            <div class="note-list">
+                {#each recentNotes as note}
+                    <button class="note-list-item" on:click={async () => {externalOpenNote(note.name, note.fileContent, await getNotePath(note.parentFolder))}}>
+                        <h2 class="note-list-item-title">{note.name}</h2>
+                        <h2>{formatDate(note.lastEdited)}</h2>
+                    </button>
+                {/each}
             </div>
-            <div class="button-wrapper">
-                <button class="button view-all-notes">View All</button>
-                <button class="button add-note"><span class="material-symbols-rounded">add_notes</span>
-                    <p>New Note</p></button>
+            <div class="note-btn-wrapper">
+                <button class="note-button">More</button>
+                <button class="note-button">New Note</button>
             </div>
         </div>
         <div class="calendar" id="calendar" bind:this={calendar} style="grid-area: box-2">
