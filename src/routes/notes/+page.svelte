@@ -17,6 +17,16 @@
         getNote,
         newNotificationTNE,
     } from "$lib/js/notes/noteEditor.js";
+    import {
+        openNoteExternal,
+        noteTitleExternal,
+        noteContentExternal,
+        noteWordCountExternal,
+        noteCharacterCountExternal,
+        notePathExternal,
+        createNoteExternal,
+        newNotificationNDM
+    } from "$lib/js/notes/noteDisplayManager.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
 
@@ -61,6 +71,7 @@
     // Export newNotification function to external js files
     newNotificationTFV(newNotificationNotes);
     newNotificationTNE(newNotificationNotes);
+    newNotificationNDM(newNotificationNotes);
 
     /**
      * Displays the next message in the queue, or does nothing if the queue is empty
@@ -85,8 +96,6 @@
     }
 
     onMount(async () => {
-        clearNotifications();
-
         let userData = await getUserData(authToken);
         username = userData.username;
         email = userData.email;
@@ -95,6 +104,10 @@
 
         await refreshFV("root");
         document.addEventListener("click", closeFVContextMenu);
+
+        // Load noteContent into note editor
+        // This is for when the user opens a note from another page
+        noteEditor.innerHTML = noteContent;
     });
 
     // Notes
@@ -130,6 +143,66 @@
     let characterCount;
 
     $: displayedView, refreshFV(path[path.length - 1]);
+    $: {
+        if ($openNoteExternal) externalLoadNote();
+        if ($createNoteExternal) externalNewNote();
+    }
+
+    /**
+     * Loads a note from external sources.
+     *
+     * Checks if the external note title, content, character count, and word count are set.
+     * If any of these are missing, it displays an error message and doesn't open the note.
+     *
+     * Sets the note title, content, character count, and word count to the external values.
+     * Sets the displayed view to "editor".
+     *
+     * @function externalLoadNote
+     */
+    function externalLoadNote() {
+        console.log("Help");
+
+        displayedView = "editor";
+
+        if (!$noteTitleExternal || !$noteContentExternal) {
+            newNotificationNotes("error", "Missing data", "The note data is missing or incomplete. Please try again.");
+
+            displayedView = "files";
+            openNoteExternal.set(false);
+
+            return;
+        }
+
+        if (!$noteCharacterCountExternal || !$noteWordCountExternal) {
+            newNotificationNotes("warning", "Missing data", "The note statistics are missing or incomplete.");
+        }
+
+        originalTitle = $noteTitleExternal;
+        noteTitle = $noteTitleExternal;
+        noteContent = $noteContentExternal;
+
+        wordCount = $noteWordCountExternal;
+        characterCount = $noteCharacterCountExternal;
+
+        openNoteExternal.set(false);
+    }
+
+    /**
+     * Opens the note editor in new note mode.
+     *
+     * This function sets the displayed view to "editor" and sets the note path
+     * to the root directory. It also sets the `createNoteExternal` store to
+     * `true`, indicating that the note editor should be in new note mode.
+     *
+     * @returns {void} - Nothing is returned.
+     */
+    async function externalNewNote() {
+        let success = await createNote($notePathExternal, authToken);
+        if (success) {
+            await openNoteHelper("Untitled", true);
+        }
+        createNoteExternal.set(false);
+    }
 
     /**
      * Opens a folder in the file viewer.
