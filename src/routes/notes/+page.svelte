@@ -135,14 +135,24 @@
 
     $: displayedView, refreshFV(path[path.length - 1]);
     $: {
-        console.log($openNoteExternal);
         if ($openNoteExternal) externalLoadNote()
     };
 
     function externalLoadNote() {
         displayedView = "editor";
 
-        console.log("Help");
+        if (!$noteTitleExternal || !$noteContentExternal) {
+            newNotificationNotes("error", "Missing data", "The note data is missing or incomplete. Please try again.");
+
+            displayedView = "files";
+            openNoteExternal.set(false);
+
+            return;
+        }
+
+        if (!$noteCharacterCountExternal || !$noteWordCountExternal) {
+            newNotificationNotes("warning", "Missing data", "The note statistics are missing or incomplete.");
+        }
 
         originalTitle = $noteTitleExternal;
         noteTitle = $noteTitleExternal;
