@@ -97,7 +97,7 @@
         document.addEventListener("click", closeFVContextMenu);
 
         // Load noteContent into note editor
-        // This is for when the user opens a note from the dashboard
+        // This is for when the user opens a note from another page
         noteEditor.innerHTML = noteContent;
     });
 

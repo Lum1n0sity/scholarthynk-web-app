@@ -33,7 +33,7 @@ export function newNotificationNDM(callback) {
  * @param {string} parent The name of the parent folder.
  * @returns {Promise<string[]>} The path of the note as an array of strings.
  */
-export async function getNotePath(parent) {
+export async function getNotePath(parent, noteId) {
     if (!parent) {
         return ["root"];
     }
@@ -43,7 +43,7 @@ export async function getNotePath(parent) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({parent: parent})
+        body: JSON.stringify({parent: parent, noteId: noteId})
     });
 
     if (response.status === 200) {

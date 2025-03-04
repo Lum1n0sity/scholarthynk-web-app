@@ -418,7 +418,7 @@
             <h1 class="section-title">Recent Notes</h1>
             <div class="note-list">
                 {#each recentNotes as note}
-                    <button class="note-list-item" on:click={async () => {externalOpenNote(note.name, note.fileContent, await getNotePath(note.parentFolder))}}>
+                    <button class="note-list-item" on:click={async () => {externalOpenNote(note.name, note.fileContent, await getNotePath(note.parentFolder, note._id))}}>
                         <h2 class="note-list-item-title">{note.name}</h2>
                         <h2>{formatDate(note.lastEdited)}</h2>
                     </button>
