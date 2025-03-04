@@ -17,7 +17,16 @@
         getNote,
         newNotificationTNE,
     } from "$lib/js/notes/noteEditor.js";
-    import {openNoteExternal, noteTitleExternal, noteContentExternal, noteWordCountExternal, noteCharacterCountExternal, notePathExternal, newNotificationNDM} from "$lib/js/notes/noteDisplayManager.js";
+    import {
+        openNoteExternal,
+        noteTitleExternal,
+        noteContentExternal,
+        noteWordCountExternal,
+        noteCharacterCountExternal,
+        notePathExternal,
+        createNoteExternal,
+        newNotificationNDM
+    } from "$lib/js/notes/noteDisplayManager.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
 
@@ -135,10 +144,24 @@
 
     $: displayedView, refreshFV(path[path.length - 1]);
     $: {
-        if ($openNoteExternal) externalLoadNote()
-    };
+        if ($openNoteExternal) externalLoadNote();
+        if ($createNoteExternal) externalNewNote();
+    }
 
+    /**
+     * Loads a note from external sources.
+     *
+     * Checks if the external note title, content, character count, and word count are set.
+     * If any of these are missing, it displays an error message and doesn't open the note.
+     *
+     * Sets the note title, content, character count, and word count to the external values.
+     * Sets the displayed view to "editor".
+     *
+     * @function externalLoadNote
+     */
     function externalLoadNote() {
+        console.log("Help");
+
         displayedView = "editor";
 
         if (!$noteTitleExternal || !$noteContentExternal) {
@@ -162,6 +185,23 @@
         characterCount = $noteCharacterCountExternal;
 
         openNoteExternal.set(false);
+    }
+
+    /**
+     * Opens the note editor in new note mode.
+     *
+     * This function sets the displayed view to "editor" and sets the note path
+     * to the root directory. It also sets the `createNoteExternal` store to
+     * `true`, indicating that the note editor should be in new note mode.
+     *
+     * @returns {void} - Nothing is returned.
+     */
+    async function externalNewNote() {
+        let success = await createNote($notePathExternal, authToken);
+        if (success) {
+            await openNoteHelper("Untitled", true);
+        }
+        createNoteExternal.set(false);
     }
 
     /**

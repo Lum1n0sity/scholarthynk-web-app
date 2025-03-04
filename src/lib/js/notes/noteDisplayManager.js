@@ -12,6 +12,7 @@ export let noteWordCountExternal = writable(null);
 export let noteCharacterCountExternal = writable(null);
 export let notePathExternal = writable(["root"]);
 
+export let createNoteExternal = writable(false);
 
 /**
  * Sets a new notification callback function.
@@ -31,6 +32,7 @@ export function newNotificationNDM(callback) {
  * Retrieves the path of a note, given its parent folder.
  *
  * @param {string} parent The name of the parent folder.
+ * @param noteId
  * @returns {Promise<string[]>} The path of the note as an array of strings.
  */
 export async function getNotePath(parent, noteId) {
@@ -89,5 +91,20 @@ export async function externalOpenNote(noteTitle, noteContent, path) {
     noteWordCountExternal.set(noteStatistics.wordCount);
     noteCharacterCountExternal.set(noteStatistics.characterCount);
 
+    goto('/notes');
+}
+
+/**
+ * Opens the note editor in new note mode.
+ *
+ * This function sets the displayed view to "editor" and sets the note path
+ * to the root directory. It also sets the `createNoteExternal` store to
+ * `true`, indicating that the note editor should be in new note mode.
+ *
+ * @returns {void} - Nothing is returned.
+ */
+export function externalCreateNote() {
+    notePathExternal.set(["root"]);
+    createNoteExternal.set(true);
     goto('/notes');
 }

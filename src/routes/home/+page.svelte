@@ -1,5 +1,6 @@
 <script>
     import logo from '$lib/assets/logo.svg';
+    import {goto} from '$app/navigation';
     import {onMount} from 'svelte';
     import {writable} from "svelte/store";
     import {getAuthToken, logout} from "$lib/js/auth.js";
@@ -33,7 +34,7 @@
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate, formatDate} from "$lib/js/utils.js";
     import {getRecentNotes, newNotificationTN} from '$lib/js/home/notes.js';
-    import {externalOpenNote, newNotificationNDM, getNotePath} from "$lib/js/notes/noteDisplayManager.js";
+    import {externalOpenNote, newNotificationNDM, getNotePath, externalCreateNote} from "$lib/js/notes/noteDisplayManager.js";
 
     const authToken = getAuthToken();
 
@@ -425,8 +426,8 @@
                 {/each}
             </div>
             <div class="note-btn-wrapper">
-                <button class="note-button">More</button>
-                <button class="note-button">New Note</button>
+                <button class="note-button" on:click={goto('/notes')}>More</button>
+                <button class="note-button" on:click={externalCreateNote}>New Note</button>
             </div>
         </div>
         <div class="calendar" id="calendar" bind:this={calendar} style="grid-area: box-2">
