@@ -29,14 +29,17 @@ export async function getUserData(authToken) {
             const data = await response.json();
             return {username: data.user.name, email: data.user.email};
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return {};
         } else if (response.status === 404) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return {};
         } else if (response.status === 500) {
+            const err = await response.json();
             newNotification("error", "Error while loading user data", "You are going to be logged out. Please try again.");
             setTimeout(() => {logout();}, 5000);
             return {};
@@ -68,7 +71,8 @@ export async function getProfilePic(authToken) {
             return URL.createObjectURL(imageBlob);
 
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return null;
         } else {

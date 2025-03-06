@@ -228,15 +228,18 @@ export async function getDateEvents(date, authToken, selectedMonth) {
             const data = await response.json();
             return data.events;
         } else if (response.status === 400) {
-            newNotification("error", "Invalid date", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Invalid date", err.error);
             return null;
         } else if (response.status === 409) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return null;
         } else if (response.status === 500) {
-            console.log(await response.json().error);
-            newNotification("error", "Error while loading your events", await response.json().error);
+            const err = await response.json();
+            console.log(err.error);
+            newNotification("error", "Error while loading your events", err.error);
             return null;
         } else {
             newNotification("error", "Unable to load your events", "There was an unexpected error. Please try again!");
@@ -296,24 +299,28 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
             if (response.status === 200) {
                 return true;
             } else if (response.status === 400) {
-                newNotification("error", "Invalid input", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Invalid input", err.error);
                 return false;
             } else if (response.status === 409) {
-                newNotification("error", "Event already exists", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Event already exists", err.error);
                 return false;
             } else if (response.status === 401) {
-                newNotification("error", "Unauthorized", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
                 setTimeout(() => {logout();}, 5000);
                 return false;
             } else if (response.status === 500) {
-                newNotification("error", "Error while adding your event", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Error while adding your event", err.error);
                 return false;
             } else {
                 newNotification("error", "Unable to add your event", "There was an unexpected error. Please try again!");
                 return false;
             }
         } else if (!authToken) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         }
@@ -351,24 +358,28 @@ export async function deleteEvent(event, clickedDate, selectedMonth, authToken) 
         if (response.status === 200) {
             return true;
         } else if (response.status === 400) {
-            newNotification("error", "Invalid input", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Invalid input", err.error);
             return false;
         } else if (response.status === 404) {
-            newNotification("error", "Event not found", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Event not found", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while deleting your event", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while deleting your event", err.error);
             return false;
         } else {
             newNotification("error", "Unable to delete your event", "There was an unexpected error. Please try again!");
             return false;
         }
     } else {
-        newNotification("error", "Unauthorized", await response.json().error);
+        newNotification("error", "Unauthorized", err.error);
         setTimeout(() => {logout();}, 5000);
         return false;
     }

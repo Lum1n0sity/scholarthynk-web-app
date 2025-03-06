@@ -44,11 +44,13 @@ export async function getRecentNotes(authToken) {
 
             return data.notes.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited)).slice(0, 6);
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return {};
         } else if (response.status === 500) {
-            newNotification("error", "Error while loading notes", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while loading notes", err.error);
             return {};
         } else {
             newNotification("error", "Unable to load notes", "There was an unexpected error. Please try again!");

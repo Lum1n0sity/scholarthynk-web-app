@@ -30,16 +30,20 @@ export async function updateNote(authToken, noteTitle, originalTitle, noteConten
         });
 
         if (response.status === 400) {
-            newNotification("error", "Error while renaming note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while renaming note", err.error);
             return {};
         } else if (response.status === 404) {
-            newNotification("error", "Unable to find note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unable to find note", err.error);
             return {};
         } else if (response.status === 500) {
-            newNotification("error", "Error while updating note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while updating note", err.error);
             return {};
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return {};
         } else if (response.status !== 200) {
@@ -79,14 +83,17 @@ export async function getNote(authToken, path, title, isNewNote) {
             let statistics = calculateNoteStatistics(data.note.fileContent);
             return {noteTitle: data.note.name, noteContent: data.note.fileContent, statistics: statistics};
         } else if (response.status === 404) {
-            newNotification("error", "Unable to find note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unable to find note", err.error);
             return {};
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return {};
         } else if (response.status === 500) {
-            newNotification("error", "Error while loading note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while loading note", err.error);
             return {};
         } else {
             newNotification("error", "Unable to load note", "There was an unexpected error. Please try again!");

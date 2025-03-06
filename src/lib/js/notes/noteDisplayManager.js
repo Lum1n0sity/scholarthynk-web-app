@@ -52,11 +52,13 @@ export async function getNotePath(parent, noteId) {
         const data = await response.json();
         return data.path;
     } else if (response.status === 401) {
-        newNotification("error", "Unauthorized", await response.json().error);
+        const err = await response.json();
+        newNotification("error", "Unauthorized", err.error);
         setTimeout(() => {logout();}, 5000);
         return [];
     } else if (response.status === 500) {
-        newNotification("error", "Error while loading note directory", await response.json().error);
+        const err = await response.json();
+        newNotification("error", "Error while loading note directory", err.error);
         return [];
     } else {
         newNotification("error", "Unable to load note directory", "There was an unexpected error. Please try again!");
