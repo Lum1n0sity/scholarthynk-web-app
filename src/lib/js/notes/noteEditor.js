@@ -108,12 +108,8 @@ export async function getNote(authToken, path, title, isNewNote) {
  * @returns {Object} An object containing the word count and character count.
  */
 export function calculateNoteStatistics(content) {
-    let wordCount = content.trim().split(/\s+/).length;
-    let characterCount = content.length;
-
-    if (wordCount === 0 || characterCount === 0) {
-        newNotification("warning", "Unable to calculate statistics", "There were no words or characters in this note.");
-    }
+    let wordCount = content ? content.trim().split(/\s+/).length : 0;
+    let characterCount = content ? content.length : 0;
 
     return {wordCount: wordCount, characterCount: characterCount}
 }
