@@ -28,7 +28,7 @@
         newNotificationNDM
     } from "$lib/js/notes/noteDisplayManager.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
-    import {getFullCurrentDate} from "$lib/js/utils.js";
+    import {getFullCurrentDate, formatDate} from "$lib/js/utils.js";
 
 
     let bindTestEditor = null;
@@ -633,7 +633,7 @@
                                 <span class="material-symbols-rounded fv-icon folder">folder</span>
                                 <p class="folder folder-name">{folder.name}</p>
                             </div>
-                            <p class="fv-item-right folder">{folder.lastEdited}</p>
+                            <p class="fv-item-right folder">{formatDate(folder.lastEdited)}</p>
                         </button>
                     {/each}
                     {#each files as file, index}
@@ -647,7 +647,7 @@
                                     <p class="folder-name">{file.name}</p>
                                 {/if}
                             </div>
-                            <p class="fv-item-right">{file.lastEdited}</p>
+                            <p class="fv-item-right">{formatDate(file.lastEdited)}</p>
                         </button>
                     {/each}
                     {#if isCreatingFolder}
