@@ -20,8 +20,8 @@ export function newNotificationTNE(callback) {
  */
 export async function updateNote(authToken, noteTitle, originalTitle, noteContent, path) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/update-note', {
-            method: 'POST',
+        const response = await fetch('http://127.0.0.1:3000/api/note/update', {
+            method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ export async function updateNote(authToken, noteTitle, originalTitle, noteConten
  */
 export async function getNote(authToken, path, title, isNewNote) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-note', {
+        const response = await fetch('http://127.0.0.1:3000/api/note/get/note', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -76,8 +76,8 @@ export async function getNote(authToken, path, title, isNewNote) {
         if (response.status === 200) {
             const data = await response.json();
 
-            let satistics = calculateNoteStatistics(data.note.fileContent);
-            return {noteTitle: data.note.name, noteContent: data.note.fileContent, statistics: satistics};
+            let statistics = calculateNoteStatistics(data.note.fileContent);
+            return {noteTitle: data.note.name, noteContent: data.note.fileContent, statistics: statistics};
         } else if (response.status === 404) {
             newNotification("error", "Unable to find note", await response.json().error);
             return {};

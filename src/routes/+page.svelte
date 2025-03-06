@@ -14,7 +14,7 @@
 
     function verifyToken() {
         if (authToken) {
-            fetch('http://localhost:3000/api/verify', {
+            fetch('http://localhost:3000/api/user/verify', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
@@ -22,7 +22,7 @@
                 },
             })
                 .then(response => {
-                    if (response.status != 200) {
+                    if (response.status !== 200) {
                         localStorage.removeItem('authToken');
                     }
                     return response.json();

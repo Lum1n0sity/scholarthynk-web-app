@@ -3,7 +3,7 @@
     import {onMount} from 'svelte';
     import DOMPurify from 'dompurify';
     import {getAuthToken, logout} from "$lib/js/auth.js";
-    import {getUserData, getProfilePic, displayUserCardHandler} from "$lib/js/user.js";
+    import {getUserData, getProfilePic, displayUserCardHandler, newNotificationU} from "$lib/js/user.js";
     import {
         getFVItems,
         deleteFolder,
@@ -29,6 +29,11 @@
     } from "$lib/js/notes/noteDisplayManager.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
+
+
+    let bindTestEditor = null;
+    let content = "";
+
 
     const authToken = getAuthToken();
 
@@ -72,6 +77,7 @@
     newNotificationTFV(newNotificationNotes);
     newNotificationTNE(newNotificationNotes);
     newNotificationNDM(newNotificationNotes);
+    newNotificationU(newNotificationNotes);
 
     /**
      * Displays the next message in the queue, or does nothing if the queue is empty
@@ -107,7 +113,7 @@
 
         // Load noteContent into note editor
         // This is for when the user opens a note from another page
-        noteEditor.innerHTML = noteContent;
+        // noteEditor.innerHTML = noteContent;
     });
 
     // Notes
@@ -418,11 +424,9 @@
      *
      * @returns {Promise<void>}
      */
-    async function handleNoteInput() {
-        let sanitizedContent = DOMPurify.sanitize(noteEditor.innerHTML)
-        console.log(sanitizedContent);
-        noteContent = sanitizedContent;
-        noteEditor.innerHTML = noteContent;
+    function handleNoteInput() {
+        noteContent = DOMPurify.sanitize(noteEditor.innerHTML);
+        // noteEditor.innerHTML = noteContent;
 
         clearTimeout(timeoutNoteEditor);
 
@@ -456,6 +460,17 @@
         noteEditor.innerHTML = noteContent;
 
         displayedView = "editor";
+
+        // Set cursor to the end of the input after content is loaded
+        noteEditor.focus();
+
+        let range = document.createRange();
+        let selection = window.getSelection();
+
+        range.selectNodeContents(noteEditor);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     /**
@@ -518,7 +533,6 @@
         mergeAdjacentSpans(span);
 
         selection.removeAllRanges();
-        noteEditor.focus();
 
         handleNoteInput();
     }
@@ -581,7 +595,6 @@
 
         nodesToRemove.forEach(node => node.remove());
         selection.removeAllRanges();
-        noteEditor.focus();
 
         handleNoteInput();
     }
@@ -663,9 +676,7 @@
                 <div class="editor">
                     <input class="open-note-title" placeholder="Note title..." bind:value={noteTitle}
                            on:input={handleNoteInput}>
-                    <div id="note" class="note" contenteditable="true" bind:this={noteEditor}
-                         on:input={(e) => {handleNoteInput();}}>
-                    </div>
+                    <div id="note" class="note" contenteditable="true" bind:this={noteEditor} on:input={handleNoteInput}></div>
                 </div>
                 <div class="note-options">
                     <div class="formatting-btns">

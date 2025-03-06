@@ -1,3 +1,13 @@
+import {logout} from "$lib/js/auth.js";
+
+let newNotification = null;
+
+export function newNotificationU(callback) {
+    if (callback) {
+        newNotification = callback;
+    }
+}
+
 /**
  * Fetches the user's data from the server.
  *
@@ -7,7 +17,7 @@
  */
 export async function getUserData(authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-user-data', {
+        const response = await fetch('http://127.0.0.1:3000/api/user/data', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -18,9 +28,21 @@ export async function getUserData(authToken) {
         if (response.status === 200) {
             const data = await response.json();
             return {username: data.user.name, email: data.user.email};
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return {};
+        } else if (response.status === 404) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return {};
+        } else if (response.status === 500) {
+            newNotification("error", "Error while loading user data", "You are going to be logged out. Please try again.");
+            setTimeout(() => {logout();}, 5000);
+            return {};
         } else {
-            // showErrorMsg('Unable to fetch user data.');
-            // Add error log update
+            newNotification("error", "Unable to load user data", "There was an unexpected error. Please try again.");
+            setTimeout(() => {logout();}, 5000);
             return {};
         }
     }
@@ -33,7 +55,7 @@ export async function getUserData(authToken) {
  */
 export async function getProfilePic(authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-profile-pic', {
+        const response = await fetch('http://127.0.0.1:3000/api/profilePic/get', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -45,9 +67,12 @@ export async function getProfilePic(authToken) {
             const imageBlob = await response.blob();
             return URL.createObjectURL(imageBlob);
 
+        } else if (response.status === 401) {
+            newNotification("error", "Unauthorized", await response.json().error);
+            setTimeout(() => {logout();}, 5000);
+            return null;
         } else {
-            // showErrorMsg('Unable to fetch your profile picture.');
-            // Add error log update
+            newNotification("error", "Unable to load profile picture", "There was an unexpected error while loading your profile picture. Please try again.");
             return null;
         }
     } else {

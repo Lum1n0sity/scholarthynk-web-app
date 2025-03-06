@@ -19,9 +19,19 @@ export function newNotificationTN(callback) {
     }
 }
 
+/**
+ * Fetches all notes from the API and returns the 6 most recently edited ones.
+ *
+ * @param {string} authToken - The authentication token to use for the request.
+ *
+ * @returns {Promise<Object[]>} An array of objects, each representing a note.
+ *                              Each object has the following properties: id, title, content, lastEdited.
+ *                              The array is sorted by the lastEdited date, with the most recently edited note first.
+ *                              If there are fewer than 6 notes, the returned array will be shorter.
+ */
 export async function getRecentNotes(authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-notes', {
+        const response = await fetch('http://127.0.0.1:3000/api/note/get/notes', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
