@@ -29,10 +29,6 @@ export async function getFVItems(folder, path, authToken) {
         if (response.status === 200) {
             const data = await response.json();
 
-            if (data.folders.length === 0 && data.files.length === 0) {
-                newNotification("warning", "No items found", "There are no items in this folder.");
-            }
-
             return {folders: data.folders, files: data.files};
         } else if (response.status === 401) {
             const err = await response.json();
