@@ -30,11 +30,6 @@
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate, formatDate} from "$lib/js/utils.js";
 
-
-    let bindTestEditor = null;
-    let content = "";
-
-
     const authToken = getAuthToken();
 
     let profilePicture = '';
