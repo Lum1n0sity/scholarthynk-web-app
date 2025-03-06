@@ -339,9 +339,8 @@
                     },
                 });
 
-                const data = await response.json();
-
-                if (data.success) {
+                if (response.status === 200) {
+                    const data = await response.json();
                     username = data.user.name;
                     userId = data.user.userId;
                     if (imgWrapper && imgWrapper.offsetWidth > 0 && imgWrapper.offsetHeight > 0) {
@@ -371,7 +370,7 @@
                         showErrorMsg('Unable to generate profile picture');
                     }
                 } else {
-                    showErrorMsg(data.error);
+                    showErrorMsg(await response.json().error);
                 }
             } catch (error) {
                 showErrorMsg(error);

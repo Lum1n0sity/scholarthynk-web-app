@@ -340,7 +340,7 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
 export async function deleteEvent(event, clickedDate, selectedMonth, authToken) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/event/delete', {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
