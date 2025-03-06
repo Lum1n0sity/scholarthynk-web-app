@@ -35,11 +35,13 @@ export async function getFVItems(folder, path, authToken) {
 
             return {folders: data.folders, files: data.files};
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while loading items", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while loading items", err.error);
             return {folders: [], files: []};
         } else {
             newNotification("error", "Unable to load items", "There was an unexpected error. Please try again!");
@@ -69,17 +71,21 @@ export async function deleteFolder(selectedItemName, path, authToken) {
         if (response.status === 200) {
             return true;
         } else if (response.status === 400) {
-            newNotification("error", "Invalid item", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Invalid item", err.error);
             return false;
         } else if (response.status === 404) {
-            newNotification("error", "Error while deleting item", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while deleting item", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while deleting item", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while deleting item", err.error);
             return false;
         } else {
             newNotification("error", "Unable to delete item", "There was an unexpected error. Please try again!");
@@ -109,17 +115,21 @@ export async function createFolder(newFolderName, path, authToken) {
         if (response.status === 200) {
             return true;
         } else if (response.status === 400) {
-            newNotification("error", "Error while creating new folder", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while creating new folder", err.error);
             return false;
         } else if (response.status === 409) {
-            newNotification("error", "Error while creating new folder", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while creating new folder", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while creating new folder", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while creating new folder", err.error);
             return false;
         } else {
             newNotification("error", "Unable to create new folder", "There was an unexpected error. Please try again!");
@@ -148,14 +158,17 @@ export async function createNote(path, authToken) {
         if (response.status === 200) {
             return true;
         } else if (response.status === 400) {
-            newNotification("error", "Error while creating new note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while creating new note", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while creating new note", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while creating new note", err.error);
             return false;
         } else {
             newNotification("error", "Unable to create new note", "There was an unexpected error. Please try again!");
@@ -201,17 +214,21 @@ export async function renameFVItem(newItemName, selectedItem, path, authToken) {
 
             return true;
         } else if (response.status === 400) {
-            newNotification("error", "Invalid name", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Invalid name", err.error);
             return false;
         } else if (response.status === 404) {
-            newNotification("error", "Item not found", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Item not found", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while renaming item", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while renaming item", err.error);
             return false;
         } else {
             newNotification("error", "Unable to rename item", "There was an unexpected error. Please try again!");

@@ -38,6 +38,8 @@
 
     const authToken = getAuthToken();
 
+    let initialize = true;
+
     let profilePicture = '';
 
     let username = '';
@@ -119,13 +121,19 @@
         assignments.set(await getAssignments(authToken, sortType));
 
         recentNotes = await getRecentNotes(authToken);
+        initialize = false;
     });
 
     // Runes
     $: sortType, assignments.set(updateAssignmentsSorting($assignments, sortType));
     $: newAssignmentData.dueDate, formatSelectedDueDate();
     $: if (addAssignment && addAssignmentBtn) addAssignmentBtn.focus();
-    $: if (!isAddingAssignment) getAssignmentsHelper(authToken);
+    $:{
+        if (!isAddingAssignment && prevStateIsAddingAssignment) {
+            getAssignmentsHelper(authToken);
+            prevStateIsAddingAssignment = false;
+        }
+    }
 
     $: selectedMonth, updateCalendarHelper();
 
@@ -136,6 +144,7 @@
     let expandedAssignment = null;
 
     let addAssignmentBtn;
+    let prevStateIsAddingAssignment = false;
     let isAddingAssignment = false;
 
     let sortType = "subject";
@@ -211,7 +220,7 @@
      * @returns {Promise<void>}
      */
     async function updateAssignmentHelper(authToken, assignment) {
-        const success = await updateAssignment(authToken, assignment);
+        const success = !initialize ? await updateAssignment(authToken, assignment) : false;
         if (success) {
             await getAssignmentsHelper(authToken);
         }
@@ -226,8 +235,10 @@
      * @returns {Promise<void>}
      */
     async function getAssignmentsHelper(authToken) {
-        const newAssignmnents = await getAssignments(authToken);
-        assignments.set(newAssignmnents);
+        if (!initialize) {
+            const newAssignments = await getAssignments(authToken);
+            assignments.set(newAssignments);
+        }
     }
 
     /**
@@ -526,7 +537,7 @@
                     {/each}
                     {#if isAddingAssignment}
                         <button class="assignment expanded" bind:this={addAssignmentBtn}
-                                on:keydown={async (e) => {isAddingAssignment = await addAssignment(authToken, e)}}>
+                                on:keydown={async (e) => {isAddingAssignment = await addAssignment(authToken, e); prevStateIsAddingAssignment = !isAddingAssignment}}>
                             <div class="assignment-base-info">
                                 <input class="assignment-title assignment-input" placeholder="Title..."
                                        bind:value={newAssignmentData.title}>
@@ -567,7 +578,7 @@
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                                     <span class="material-symbols-rounded addAssignment" style="font-size: 2rem"
-                                          on:click={async (e) => {isAddingAssignment = await addAssignment(authToken, e)}}>add</span>
+                                          on:click={async (e) => {isAddingAssignment = await addAssignment(authToken, e); prevStateIsAddingAssignment = !isAddingAssignment}}>add</span>
                                 </div>
                                 <textarea id="assignment-description" class="assignment-description"
                                           placeholder="Description..."
@@ -576,7 +587,7 @@
                         </button>
                     {/if}
                 </div>
-                <button class="add-assignment" on:click={()=>{isAddingAssignment = true}}><span
+                <button class="add-assignment" on:click={()=>{isAddingAssignment = true; prevStateIsAddingAssignment = false}}><span
                         class="material-symbols-rounded">add</span>
                     <h1>Add Assignment</h1></button>
             </div>

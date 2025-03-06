@@ -49,11 +49,13 @@ export async function getAssignments(authToken, sortType) {
             const data = await response.json();
             return updateAssignmentsSorting(data.assignments, sortType);
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return [];
         } else if (response.status === 500) {
-            newNotification("error", "Error while loading assignments", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while loading assignments", err.error);
             return [];
         } else {
             newNotification("error", "Unable to load assignments", "There was an unexpected error. Please try again!");
@@ -110,17 +112,21 @@ export async function addAssignment(authToken, e) {
                 });
                 return false;
             } else if (response.status === 400) {
-                newNotification("error", "Invalid assignment", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Invalid assignment", err.error);
                 return false;
             } else if (response.status === 409) {
-                newNotification("error", "Assignment already exists", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Assignment already exists", err.error);
                 return false;
             } else if (response.status === 401) {
-                newNotification("error", "Unauthorized", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
                 setTimeout(() => {logout();}, 5000);
                 return false;
             } else if (response.status === 500) {
-                newNotification("error", "Error while adding assignment", await response.json().error);
+                const err = await response.json();
+                newNotification("error", "Error while adding assignment", err.error);
                 return false;
             } else {
                 newNotification("error", "Unable to add assignment", "There was an unexpected error. Please try again!");
@@ -154,14 +160,17 @@ export async function updateAssignment(authToken, assignment) {
         if (response.status === 200) {
             return true;
         } else if (response.status === 404) {
-            newNotification("error", "Assignment not found", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Assignment not found", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while updating your assignment", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while updating your assignment", err.error);
             return false;
         } else {
             newNotification("error", "Unable to update assignment", "There was an unexpected error. Please try again!");
@@ -193,14 +202,17 @@ export async function deleteAssignment(authToken, index, assignments) {
         if (response.status === 200) {
             return true;
         } else if (response.status === 404) {
-            newNotification("error", "Assignment not found", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Assignment not found", err.error);
             return false;
         } else if (response.status === 401) {
-            newNotification("error", "Unauthorized", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
-            newNotification("error", "Error while deleting your assignment", await response.json().error);
+            const err = await response.json();
+            newNotification("error", "Error while deleting your assignment", err.error);
             return false;
         } else {
             newNotification("error", "Unable to delete assignment", "There was an unexpected error. Please try again!");
