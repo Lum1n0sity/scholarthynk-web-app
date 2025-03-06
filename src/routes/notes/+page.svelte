@@ -113,7 +113,7 @@
 
         // Load noteContent into note editor
         // This is for when the user opens a note from another page
-        // noteEditor.innerHTML = noteContent;
+        noteEditor.innerHTML = noteContent;
     });
 
     // Notes
@@ -166,8 +166,6 @@
      * @function externalLoadNote
      */
     function externalLoadNote() {
-        console.log("Help");
-
         displayedView = "editor";
 
         if (!$noteTitleExternal || !$noteContentExternal) {
