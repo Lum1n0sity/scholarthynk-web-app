@@ -37,7 +37,7 @@ export const newAssignmentData = writable({
  */
 export async function getAssignments(authToken, sortType) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-assignments', {
+        const response = await fetch('http://127.0.0.1:3000/api/assignment/get', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -91,7 +91,7 @@ export async function addAssignment(authToken, e) {
         return false;
     } else if (e.target.classList.contains('addAssignment')) {
         if (authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/add-assignment', {
+            const response = await fetch('http://127.0.0.1:3000/api/assignment/new', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
@@ -142,8 +142,8 @@ export async function addAssignment(authToken, e) {
  */
 export async function updateAssignment(authToken, assignment) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/update-assignment', {
-            method: 'POST',
+        const response = await fetch('http://127.0.0.1:3000/api/assignment/update', {
+            method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
@@ -181,8 +181,8 @@ export async function updateAssignment(authToken, assignment) {
  */
 export async function deleteAssignment(authToken, index, assignments) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/delete-assignment', {
-            method: 'POST',
+        const response = await fetch('http://127.0.0.1:3000/api/assignment/delete', {
+            method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'

@@ -4,7 +4,7 @@
     import {onMount} from 'svelte';
     import {writable} from "svelte/store";
     import {getAuthToken, logout} from "$lib/js/auth.js";
-    import {getUserData, getProfilePic, displayUserCardHandler} from "$lib/js/user.js";
+    import {getUserData, getProfilePic, displayUserCardHandler, newNotificationU} from "$lib/js/user.js";
     import {
         newAssignmentData,
         addAssignment,
@@ -79,6 +79,7 @@
     newNotificationTA(newNotification);
     newNotificationTN(newNotification);
     newNotificationNDM(newNotification);
+    newNotificationU(newNotification);
 
     /**
      * Displays the next message in the queue, or does nothing if the queue is empty
@@ -394,11 +395,10 @@
             events = await getDateEvents(clickedDate, authToken, selectedMonth);
             console.log(events);
             events.length !== 0 ? updateTopEventClass() : document.querySelector('.add-event').classList.add('top-event');
-            ;
         }
     }
 </script>
-<!--externalOpenNote(note.name, note.content, getNotePath(note.parentFolder));-->
+
 <div class="body">
     <div class="nav-bar">
         <div class="logo">

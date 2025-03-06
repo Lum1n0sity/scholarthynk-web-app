@@ -40,7 +40,7 @@ export async function getNotePath(parent, noteId) {
         return ["root"];
     }
 
-    const response = await fetch("http://127.0.0.1:3000/api/notes/getNotePath", {
+    const response = await fetch("http://127.0.0.1:3000/api/note/get/notePath", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

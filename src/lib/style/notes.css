@@ -351,6 +351,8 @@
 }
 
 .note {
+    text-align: left;
+    direction: ltr;
     word-break: break-word;
     width: 96vw;
     height: 82%;
@@ -373,7 +375,6 @@
 }
 
 .formatting-btns {
-    /*background: red;*/
     height: 100%;
     width: 40%;
     display: flex;

@@ -109,8 +109,8 @@ export async function handleDateClick(date, event, calendar, clickedDate, authTo
 export function goBackMonth(selectedMonth) {
     if (!selectedMonth) {
         console.error("Invalid selectedMonth: ", selectedMonth);
-        // Add error handling here
-        return;
+        newNotification("error", "Invalid selectedMonth", "Invalid selectedMonth: " + selectedMonth);
+        return "";
     }
 
     const [month, year] = selectedMonth.split('-');
@@ -215,7 +215,7 @@ export function getFullDate(date, selectedMonth) {
  */
 export async function getDateEvents(date, authToken, selectedMonth) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-events', {
+        const response = await fetch('http://127.0.0.1:3000/api/event/get', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -284,7 +284,7 @@ export function handleNewEventClick() {
 export async function addEvent(event, newEventName, clickedDate, selectedMonth, authToken) {
     if (event.type === "blur" || event.key === "Enter") {
         if (newEventName && authToken) {
-            const response = await fetch('http://127.0.0.1:3000/api/new-event', {
+            const response = await fetch('http://127.0.0.1:3000/api/event/new', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
@@ -339,8 +339,8 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
  */
 export async function deleteEvent(event, clickedDate, selectedMonth, authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/delete-event', {
-            method: 'POST',
+        const response = await fetch('http://127.0.0.1:3000/api/event/delete', {
+            method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'

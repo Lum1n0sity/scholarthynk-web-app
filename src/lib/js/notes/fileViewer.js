@@ -17,7 +17,7 @@ export function newNotificationTFV(callback) {
  */
 export async function getFVItems(folder, path, authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/get-fv-items', {
+        const response = await fetch('http://127.0.0.1:3000/api/fileViewer/get', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -57,8 +57,8 @@ export async function getFVItems(folder, path, authToken) {
  */
 export async function deleteFolder(selectedItemName, path, authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/delete-fv-items', {
-            method: 'POST',
+        const response = await fetch('http://127.0.0.1:3000/api/fileViewer/delete', {
+            method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
@@ -97,13 +97,13 @@ export async function deleteFolder(selectedItemName, path, authToken) {
  */
 export async function createFolder(newFolderName, path, authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/create-folder', {
+        const response = await fetch('http://127.0.0.1:3000/api/fileViewer/create', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({folder: path, name: newFolderName})
+            body: JSON.stringify({parentPath: path, folderName: newFolderName})
         });
 
         if (response.status === 200) {
@@ -136,7 +136,7 @@ export async function createFolder(newFolderName, path, authToken) {
  */
 export async function createNote(path, authToken) {
     if (authToken) {
-        const response = await fetch('http://127.0.0.1:3000/api/new-note', {
+        const response = await fetch('http://127.0.0.1:3000/api/note/new', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -184,8 +184,8 @@ export async function renameFVItem(newItemName, selectedItem, path, authToken) {
             return false;
         }
 
-        const response = await fetch('http://127.0.0.1:3000/api/rename-fv-item', {
-            method: 'POST',
+        const response = await fetch('http://127.0.0.1:3000/api/fileViewer/rename', {
+            method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'

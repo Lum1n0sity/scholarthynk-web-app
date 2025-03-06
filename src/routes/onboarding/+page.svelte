@@ -91,8 +91,8 @@
 
         if (authToken) {
             try {
-                fetch('http://localhost:3000/api/delete-account', {
-                    method: 'POST',
+                fetch('http://localhost:3000/api/user/delete', {
+                    method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
@@ -235,7 +235,7 @@
                 try {
                     const authToken = browser ? localStorage.getItem('authToken') : null;
 
-                    const response = await fetch('http://localhost:3000/api/upload-profile-pic', {
+                    const response = await fetch('http://localhost:3000/api/profilePic/upload', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${authToken}`,
@@ -287,7 +287,7 @@
             try {
                 const authToken = browser ? localStorage.getItem('authToken') : null;
 
-                const response = await fetch('http://localhost:3000/api/upload-profile-pic', {
+                const response = await fetch('http://localhost:3000/api/profilePic/upload', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -331,7 +331,7 @@
 
         if (authToken) {
             try {
-                const response = await fetch('http://localhost:3000/api/get-user-data', {
+                const response = await fetch('http://localhost:3000/api/user/data', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -339,9 +339,8 @@
                     },
                 });
 
-                const data = await response.json();
-
-                if (data.success) {
+                if (response.status === 200) {
+                    const data = await response.json();
                     username = data.user.name;
                     userId = data.user.userId;
                     if (imgWrapper && imgWrapper.offsetWidth > 0 && imgWrapper.offsetHeight > 0) {
@@ -371,7 +370,7 @@
                         showErrorMsg('Unable to generate profile picture');
                     }
                 } else {
-                    showErrorMsg(data.error);
+                    showErrorMsg(await response.json().error);
                 }
             } catch (error) {
                 showErrorMsg(error);
