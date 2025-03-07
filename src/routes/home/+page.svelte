@@ -8,9 +8,7 @@
     import {
         newAssignmentData,
         addAssignment,
-        toggleAssignmentDetails,
         getAssignments,
-        formatSelectedDueDate,
         updateAssignment,
         updateAssignmentsSorting,
         deleteAssignment,
@@ -126,7 +124,6 @@
 
     // Runes
     $: sortType, assignments.set(updateAssignmentsSorting($assignments, sortType));
-    $: newAssignmentData.dueDate, formatSelectedDueDate();
     $: if (addAssignment && addAssignmentBtn) addAssignmentBtn.focus();
     $:{
         if (!isAddingAssignment && prevStateIsAddingAssignment) {
@@ -208,6 +205,23 @@
     function handleExpandClick(index, e) {
         e.stopPropagation();
         expandedAssignment = toggleAssignmentDetails(expandedAssignment, index, e);
+    }
+
+    /**
+     * Toggle the visibility of an assignment's details.
+     *
+     * @param {assignment} expandedAssignment The currently expanded assignment.
+     * @param {number} index The index of the assignment in the assignments array.
+     * @param {Event} e The event that triggered this function.
+     *
+     * @returns {Promise<void>}
+     */
+    function toggleAssignmentDetails(expandedAssignment, index, e) {
+        if (e.target.closest('.assignment-details-wrapper')) {
+            return null;
+        }
+
+        return expandedAssignment === index ? null : index;
     }
 
     /**

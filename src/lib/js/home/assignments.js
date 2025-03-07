@@ -24,7 +24,7 @@ export function newNotificationTA(callback) {
 
 export const newAssignmentData = writable({
     title: "",
-    dueDate: new Date(),
+    dueDate: "",
     subject: "math",
     priority: "medium",
     description: ""
@@ -35,7 +35,7 @@ export const newAssignmentData = writable({
  *
  * @returns {Promise<void>}
  */
-export async function getAssignments(authToken, sortType) {
+export async function getAssignments(authToken, sortType, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/assignment/get', {
             method: 'GET',
@@ -49,16 +49,25 @@ export async function getAssignments(authToken, sortType) {
             const data = await response.json();
             return updateAssignmentsSorting(data.assignments, sortType);
         } else if (response.status === 401) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return [];
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return [];
+            }
+
+            throw new Error(`Error while loading assignments: Unauthorized`);
         } else if (response.status === 500) {
-            const err = await response.json();
-            newNotification("error", "Error while loading assignments", err.error);
-            return [];
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Error while loading assignments", err.error);
+                return [];
+            }
+
+            throw new Error(`Error while loading assignments: Internal Server Error`);
         } else {
-            newNotification("error", "Unable to load assignments", "There was an unexpected error. Please try again!");
+            if (!testing) newNotification("error", "Unable to load assignments", "There was an unexpected error. Please try again!");
+
             return [];
         }
     }
@@ -79,20 +88,21 @@ export async function getAssignments(authToken, sortType) {
  * @param {string} authToken The authentication token to use for the request.
  * @param {KeyboardEvent} e The keyboard event that triggered the function.
  *
+ * @param testing
  * @returns {Promise<void>}
  */
-export async function addAssignment(authToken, e) {
+export async function addAssignment(authToken, e, testing = false) {
     if (e.key === "Escape") {
-        newAssignmentData.set({
-            title: "",
-            dueDate: new Date(),
-            subject: "math",
-            priority: "medium",
-            description: ""
-        });
+        newAssignmentData.title = "";
+        newAssignmentData.dueDate = "";
+        newAssignmentData.subject = "math";
+        newAssignmentData.priority = "medium";
+        newAssignmentData.description = "";
+
         return false;
     } else if (e.target.classList.contains('addAssignment')) {
         if (authToken) {
+            newAssignmentData.dueDate = formatSelectedDueDate();
             const response = await fetch('http://127.0.0.1:3000/api/assignment/new', {
                 method: 'POST',
                 headers: {
@@ -103,33 +113,48 @@ export async function addAssignment(authToken, e) {
             });
 
             if (response.status === 200) {
-                newAssignmentData.set({
-                    title: "",
-                    dueDate: new Date(),
-                    subject: "math",
-                    priority: "medium",
-                    description: ""
-                });
+                newAssignmentData.title = "";
+                newAssignmentData.dueDate = "";
+                newAssignmentData.subject = "math";
+                newAssignmentData.priority = "medium";
+                newAssignmentData.description = "";
+
                 return false;
             } else if (response.status === 400) {
-                const err = await response.json();
-                newNotification("error", "Invalid assignment", err.error);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Invalid assignment", err.error);
+                    return true;
+                }
+
+                throw new Error("Error while adding assignment: Invalid inputs");
             } else if (response.status === 409) {
-                const err = await response.json();
-                newNotification("error", "Assignment already exists", err.error);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Assignment already exists", err.error);
+                    return true;
+                }
+
+                throw new Error("Error while adding assignment: Assignment already exists");
             } else if (response.status === 401) {
-                const err = await response.json();
-                newNotification("error", "Unauthorized", err.error);
-                setTimeout(() => {logout();}, 5000);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Unauthorized", err.error);
+                    setTimeout(() => {logout();}, 5000);
+                    return false;
+                }
+
+                throw new Error("Error while adding assignment: Unauthorized");
             } else if (response.status === 500) {
-                const err = await response.json();
-                newNotification("error", "Error while adding assignment", err.error);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Error while adding assignment", err.error);
+                    return true;
+                }
+
+                throw new Error("Error while adding assignment: Internal Server Error");
             } else {
-                newNotification("error", "Unable to add assignment", "There was an unexpected error. Please try again!");
+                if (!testing) newNotification("error", "Unable to add assignment", "There was an unexpected error. Please try again!");
                 return true;
             }
         }
@@ -144,9 +169,10 @@ export async function addAssignment(authToken, e) {
  * @param {string} authToken The authentication token to use for the request.
  * @param {assignment} assignment The assignment to update.
  *
+ * @param testing
  * @returns {Promise<void>}
  */
-export async function updateAssignment(authToken, assignment) {
+export async function updateAssignment(authToken, assignment, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/assignment/update', {
             method: 'PUT',
@@ -160,20 +186,32 @@ export async function updateAssignment(authToken, assignment) {
         if (response.status === 200) {
             return true;
         } else if (response.status === 404) {
-            const err = await response.json();
-            newNotification("error", "Assignment not found", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Assignment not found", err.error);
+                return false;
+            }
+
+            throw new Error("Error while updating assignment: Assignment not found");
         } else if (response.status === 401) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return false;
+            }
+
+            throw new Error("Error while updating assignment: Unauthorized");
         } else if (response.status === 500) {
-            const err = await response.json();
-            newNotification("error", "Error while updating your assignment", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Error while updating your assignment", err.error);
+                return false;
+            }
+
+            throw new Error("Error while updating assignment: Internal Server Error");
         } else {
-            newNotification("error", "Unable to update assignment", "There was an unexpected error. Please try again!");
+            if (!testing) newNotification("error", "Unable to update assignment", "There was an unexpected error. Please try again!");
             return false;
         }
     }
@@ -186,9 +224,10 @@ export async function updateAssignment(authToken, assignment) {
  * @param {number} index The index of the assignment in the `assignments` store.
  *
  * @param assignments
+ * @param testing
  * @returns {Promise<void>}
  */
-export async function deleteAssignment(authToken, index, assignments) {
+export async function deleteAssignment(authToken, index, assignments, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/assignment/delete', {
             method: 'DELETE',
@@ -203,39 +242,22 @@ export async function deleteAssignment(authToken, index, assignments) {
             return true;
         } else if (response.status === 404) {
             const err = await response.json();
-            newNotification("error", "Assignment not found", err.error);
+            if (!testing) newNotification("error", "Assignment not found", err.error);
             return false;
         } else if (response.status === 401) {
             const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
+            if (!testing) newNotification("error", "Unauthorized", err.error);
             setTimeout(() => {logout();}, 5000);
             return false;
         } else if (response.status === 500) {
             const err = await response.json();
-            newNotification("error", "Error while deleting your assignment", err.error);
+            if (!testing) newNotification("error", "Error while deleting your assignment", err.error);
             return false;
         } else {
-            newNotification("error", "Unable to delete assignment", "There was an unexpected error. Please try again!");
+            if (!testing) newNotification("error", "Unable to delete assignment", "There was an unexpected error. Please try again!");
             return false;
         }
     }
-}
-
-/**
- * Toggle the visibility of an assignment's details.
- *
- * @param {assignment} expandedAssignment The currently expanded assignment.
- * @param {number} index The index of the assignment in the assignments array.
- * @param {Event} e The event that triggered this function.
- *
- * @returns {Promise<void>}
- */
-export function toggleAssignmentDetails(expandedAssignment, index, e) {
-    if (e.target.closest('.assignment-details-wrapper')) {
-        return null;
-    }
-
-    return expandedAssignment === index ? null : index;
 }
 
 /**
@@ -280,11 +302,11 @@ export function updateAssignmentsSorting(assignments, sortType) {
 }
 
 /**
- * Formats the selected due date as "DD.MM.YYYY".
+ * Formats the selected due date to "DD.MM.YYYY".
  *
  * @returns {string} The formatted due date.
  */
-export function formatSelectedDueDate() {
-    const dateObj = new Date();
-    return `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
+export function formatSelectedDueDate(date = newAssignmentData.dueDate) {
+    const [year, month, day] = date.split('-');
+    return `${day}.${month}.${year}`;
 }
