@@ -1,4 +1,5 @@
 import nock from 'nock';
+import {describe, it, expect, afterEach, vi} from 'vitest';
 import {
     getAssignments,
     updateAssignmentsSorting,
@@ -8,7 +9,6 @@ import {
     updateAssignment,
     deleteAssignment
 } from '$lib/js/home/assignments';
-import {describe, it, expect, afterEach, vi} from 'vitest';
 
 vi.mock('$lib/js/')
 
@@ -77,6 +77,10 @@ describe('getAssignments', () => {
 });
 
 describe('updateAssignmentsSorting', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should sort assignments based on subject correctly', () => {
         const assignments = [
             {
@@ -531,6 +535,10 @@ describe('addAssignment', () => {
 });
 
 describe('updateAssignment', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API call', async () => {
         const mockAssignment = {
             "_id": "67ca23c4302d5ff21cf74fdb",
@@ -630,6 +638,10 @@ describe('updateAssignment', () => {
 });
 
 describe('deleteAssignment', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API call', async () => {
         const mockAssignments = [
             {

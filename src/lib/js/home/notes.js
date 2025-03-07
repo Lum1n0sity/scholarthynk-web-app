@@ -29,7 +29,7 @@ export function newNotificationTN(callback) {
  *                              The array is sorted by the lastEdited date, with the most recently edited note first.
  *                              If there are fewer than 6 notes, the returned array will be shorter.
  */
-export async function getRecentNotes(authToken) {
+export async function getRecentNotes(authToken, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/note/get/notes', {
             method: 'GET',
@@ -44,21 +44,25 @@ export async function getRecentNotes(authToken) {
 
             return data.notes.sort((a, b) => new Date(b.lastEdited) - new Date(a.lastEdited)).slice(0, 6);
         } else if (response.status === 401) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return {};
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return {};
+            }
+
+            throw new Error("Error while loading recent notes: Unauthorized");
         } else if (response.status === 500) {
-            const err = await response.json();
-            newNotification("error", "Error while loading notes", err.error);
-            return {};
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Error while loading recent notes", err.error);
+                return {};
+            }
+
+            throw new Error("Error while loading recent notes: Internal Server Error");
         } else {
-            newNotification("error", "Unable to load notes", "There was an unexpected error. Please try again!");
+            newNotification("error", "Unable to load recent notes", "There was an unexpected error. Please try again!");
             return {};
         }
-    } else {
-        newNotification("error", "Unauthorized", "You are not authorized!");
-        setTimeout(() => {logout();}, 5000);
-        return {};
     }
 }

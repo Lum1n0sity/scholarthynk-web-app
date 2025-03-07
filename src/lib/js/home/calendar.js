@@ -79,17 +79,21 @@ export function getMonthData(selectedMonth) {
  * @param {string} authToken - The authentication token for API requests.
  * @param {string} selectedMonth - The currently selected month in the format "Month-YYYY".
  *
+ * @param testing
  * @returns {Promise<Object>} An object containing the new clicked date, the list of events
  *                            for that date, the bottom position of the calendar, and the action
  *                            to be taken ("open" or "close").
  */
-export async function handleDateClick(date, event, calendar, clickedDate, authToken, selectedMonth) {
+export async function handleDateClick(date, event, calendar, clickedDate, authToken, selectedMonth, testing = false) {
+    console.log(date);
+    console.log(clickedDate);
+
     if (clickedDate === date) {
         return {clickedDate: null, events: [], action: "close"};
     } else {
         const rect = calendar.getBoundingClientRect();
 
-        let events = await getDateEvents(date, authToken, selectedMonth);
+        let events = await getDateEvents(date, authToken, selectedMonth, testing);
 
         return {clickedDate: date, events: events, bottomOfCalendar: rect.height + window.innerHeight * 0.02, width: rect.width, action: "open"};
     }
@@ -211,9 +215,10 @@ export function getFullDate(date, selectedMonth) {
  * @param {string} authToken - The authentication token for the API request.
  * @param {string} selectedMonth - The month and year in the format "Month-YYYY".
  *
+ * @param testing
  * @returns {Promise<Array<Object>|null>} The list of events for the given date, or null if there is an error.
  */
-export async function getDateEvents(date, authToken, selectedMonth) {
+export async function getDateEvents(date, authToken, selectedMonth, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/event/get', {
             method: 'POST',
@@ -228,27 +233,29 @@ export async function getDateEvents(date, authToken, selectedMonth) {
             const data = await response.json();
             return data.events;
         } else if (response.status === 400) {
-            const err = await response.json();
-            newNotification("error", "Invalid date", err.error);
-            return null;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Invalid date", err.error);
+                return null;
+            }
         } else if (response.status === 409) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return null;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return null;
+            }
         } else if (response.status === 500) {
-            const err = await response.json();
-            console.log(err.error);
-            newNotification("error", "Error while loading your events", err.error);
-            return null;
+            if (!testing) {
+                const err = await response.json();
+                console.log(err.error);
+                newNotification("error", "Error while loading your events", err.error);
+                return null;
+            }
         } else {
-            newNotification("error", "Unable to load your events", "There was an unexpected error. Please try again!");
+            if (!testing) newNotification("error", "Unable to load your events", "There was an unexpected error. Please try again!");
             return null;
         }
-    } else {
-        newNotification("error", "Unauthorized", "You are not logged in!");
-        setTimeout(() => {logout();}, 5000);
-        return null;
     }
 }
 

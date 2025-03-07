@@ -22,7 +22,7 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+vitest.config.js.timestamp-*.mjs
 
 package-lock.json
 
-vitest.config.js.timestamp-*.mjs
