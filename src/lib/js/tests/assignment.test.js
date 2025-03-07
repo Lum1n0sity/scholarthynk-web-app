@@ -1,6 +1,14 @@
 import nock from 'nock';
-import { getAssignments, updateAssignmentsSorting, newAssignmentData, formatSelectedDueDate, addAssignment, updateAssignment } from '$lib/js/home/assignments';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import {
+    getAssignments,
+    updateAssignmentsSorting,
+    newAssignmentData,
+    formatSelectedDueDate,
+    addAssignment,
+    updateAssignment,
+    deleteAssignment
+} from '$lib/js/home/assignments';
+import {describe, it, expect, afterEach, vi} from 'vitest';
 
 vi.mock('$lib/js/')
 
@@ -11,16 +19,34 @@ describe('getAssignments', () => {
 
     it('should return assignments when API call is successful', async () => {
         const assignments = [
-            { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', description: 'Description 1' },
-            { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', description: 'Description 2' },
-            { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', description: 'Description 3' },
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                description: 'Description 3'
+            },
         ];
 
         nock('http://127.0.0.1:3000')
             .get('/api/assignment/get')
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader('Content-Type', 'application/json')
-            .reply(200, { assignments });
+            .reply(200, {assignments});
 
         // Sort expected array
         const sortedAssignments = updateAssignmentsSorting([...assignments], 'sort-type');
@@ -34,7 +60,7 @@ describe('getAssignments', () => {
             .get('/api/assignment/get')
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader('Content-Type', 'application/json')
-            .reply(401, { error: 'Unauthorized' });
+            .reply(401, {error: 'Unauthorized'});
 
         await expect(getAssignments('auth-token', 'sort-type', true)).rejects.toThrow('Error while loading assignments: Unauthorized');
     });
@@ -44,72 +70,268 @@ describe('getAssignments', () => {
             .get('/api/assignment/get')
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader('Content-Type', 'application/json')
-            .reply(500, { error: 'Internal Server Error' });
+            .reply(500, {error: 'Internal Server Error'});
 
         await expect(getAssignments('auth-token', 'sort-type', true)).rejects.toThrow('Error while loading assignments: Internal Server Error');
     });
 });
 
 describe('updateAssignmentsSorting', () => {
-   it('should sort assignments based on subject correctly', () => {
-       const assignments = [
-           { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', status: "done", description: 'Description 3' },
-           { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', status: "inProgress", description: 'Description 2' },
-       ];
-       const sortedAssignments = updateAssignmentsSorting([...assignments], 'subject');
-       expect(sortedAssignments).toEqual([
-           { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', status: "done", description: 'Description 3' },
-       ]);
-   });
+    it('should sort assignments based on subject correctly', () => {
+        const assignments = [
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                status: "done",
+                description: 'Description 3'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+        ];
+        const sortedAssignments = updateAssignmentsSorting([...assignments], 'subject');
+        expect(sortedAssignments).toEqual([
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                status: "done",
+                description: 'Description 3'
+            },
+        ]);
+    });
 
-   it('should sort assignments based on date correctly', () => {
-       const assignments = [
-           { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', status: "done", description: 'Description 3' },
-           { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', status: "inProgress", description: 'Description 2' },
-       ];
-       const sortedAssignments = updateAssignmentsSorting([...assignments], 'date');
-       expect(sortedAssignments).toEqual([
-           { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', status: "done", description: 'Description 3' },
-       ]);
-   });
+    it('should sort assignments based on date correctly', () => {
+        const assignments = [
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                status: "done",
+                description: 'Description 3'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+        ];
+        const sortedAssignments = updateAssignmentsSorting([...assignments], 'date');
+        expect(sortedAssignments).toEqual([
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                status: "done",
+                description: 'Description 3'
+            },
+        ]);
+    });
 
-   it('should sort assignments based on status correctly', () => {
-       const assignments = [
-           { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', status: "done", description: 'Description 3' },
-           { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', status: "inProgress", description: 'Description 2' },
-       ];
-       const sortedAssignments = updateAssignmentsSorting([...assignments], 'status');
-       expect(sortedAssignments).toEqual([
-           { title: 'Assignment 1', dueDate: '01.01.2026', subject: 'Math', priority: 'Medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 2', dueDate: '02.01.2026', subject: 'English', priority: 'Low', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 3', dueDate: '03.01.2026', subject: 'Science', priority: 'High', status: "done", description: 'Description 3' },
-       ]);
-   });
+    it('should sort assignments based on status correctly', () => {
+        const assignments = [
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                status: "done",
+                description: 'Description 3'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+        ];
+        const sortedAssignments = updateAssignmentsSorting([...assignments], 'status');
+        expect(sortedAssignments).toEqual([
+            {
+                title: 'Assignment 1',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'Medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'Low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'High',
+                status: "done",
+                description: 'Description 3'
+            },
+        ]);
+    });
 
-   it('should sort assignments based on priority correctly', () => {
-       const assignments = [
-           { title: 'Assignment 3', dueDate: '01.01.2026', subject: 'Math', priority: 'medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 2', dueDate: '03.01.2026', subject: 'Science', priority: 'high', status: "done", description: 'Description 3' },
-           { title: 'Assignment 5', dueDate: '02.01.2026', subject: 'English', priority: 'lowest', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 4', dueDate: '02.01.2026', subject: 'English', priority: 'low', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 1', dueDate: '02.01.2026', subject: 'English', priority: 'highest', status: "inProgress", description: 'Description 2' },
-       ];
-       const sortedAssignments = updateAssignmentsSorting([...assignments], 'priority');
-       expect(sortedAssignments).toEqual([
-           { title: 'Assignment 1', dueDate: '02.01.2026', subject: 'English', priority: 'highest', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 2', dueDate: '03.01.2026', subject: 'Science', priority: 'high', status: "done", description: 'Description 3' },
-           { title: 'Assignment 3', dueDate: '01.01.2026', subject: 'Math', priority: 'medium', status: "open", description: 'Description 1' },
-           { title: 'Assignment 4', dueDate: '02.01.2026', subject: 'English', priority: 'low', status: "inProgress", description: 'Description 2' },
-           { title: 'Assignment 5', dueDate: '02.01.2026', subject: 'English', priority: 'lowest', status: "inProgress", description: 'Description 2' },
-       ]);
-   });
+    it('should sort assignments based on priority correctly', () => {
+        const assignments = [
+            {
+                title: 'Assignment 3',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'high',
+                status: "done",
+                description: 'Description 3'
+            },
+            {
+                title: 'Assignment 5',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'lowest',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 4',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 1',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'highest',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+        ];
+        const sortedAssignments = updateAssignmentsSorting([...assignments], 'priority');
+        expect(sortedAssignments).toEqual([
+            {
+                title: 'Assignment 1',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'highest',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 2',
+                dueDate: '03.01.2026',
+                subject: 'Science',
+                priority: 'high',
+                status: "done",
+                description: 'Description 3'
+            },
+            {
+                title: 'Assignment 3',
+                dueDate: '01.01.2026',
+                subject: 'Math',
+                priority: 'medium',
+                status: "open",
+                description: 'Description 1'
+            },
+            {
+                title: 'Assignment 4',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'low',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+            {
+                title: 'Assignment 5',
+                dueDate: '02.01.2026',
+                subject: 'English',
+                priority: 'lowest',
+                status: "inProgress",
+                description: 'Description 2'
+            },
+        ]);
+    });
 });
 
 describe('formatSelectedDueDate', () => {
@@ -144,14 +366,14 @@ describe('addAssignment', () => {
     });
 
     it('should reset data and return false on Escape key press', async () => {
-       const mockEvent = { key: "Escape" };
-       const result = await addAssignment('auth-token', mockEvent, true);
-       expect(result).toBe(false);
-       expect(newAssignmentData.title).toBe("");
+        const mockEvent = {key: "Escape"};
+        const result = await addAssignment('auth-token', mockEvent, true);
+        expect(result).toBe(false);
+        expect(newAssignmentData.title).toBe("");
     });
 
     it('should make a successful API call', async () => {
-        const mockEvent = { target: { classList: {contains: () => true } } };
+        const mockEvent = {target: {classList: {contains: () => true}}};
         const mockDateString = "2025-03-06"
         const mockData = {
             title: 'Assignment 1',
@@ -176,7 +398,7 @@ describe('addAssignment', () => {
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
-            .reply(200, { success: true });
+            .reply(200, {success: true});
 
         const result = await addAssignment('auth-token', mockEvent, true);
         expect(result).toBe(false);
@@ -184,7 +406,7 @@ describe('addAssignment', () => {
     });
 
     it('should handle API error with 400 status code', async () => {
-        const mockEvent = { target: { classList: {contains: () => true } } };
+        const mockEvent = {target: {classList: {contains: () => true}}};
         const mockDateString = "2025-03-06"
         const mockData = {
             title: 'Assignment 1',
@@ -209,13 +431,13 @@ describe('addAssignment', () => {
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
-            .reply(400, { error: "Invalid inputs" });
+            .reply(400, {error: "Invalid inputs"});
 
         await expect(addAssignment('auth-token', mockEvent, true)).rejects.toThrow('Error while adding assignment: Invalid inputs');
     });
 
     it('should handle API error with 409 status code', async () => {
-        const mockEvent = { target: { classList: {contains: () => true } } };
+        const mockEvent = {target: {classList: {contains: () => true}}};
         const mockDateString = "2025-03-06"
         const mockData = {
             title: 'Assignment 1',
@@ -240,13 +462,13 @@ describe('addAssignment', () => {
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
-            .reply(409, { error: "Assignment already exists" });
+            .reply(409, {error: "Assignment already exists"});
 
         await expect(addAssignment('auth-token', mockEvent, true)).rejects.toThrow('Error while adding assignment: Assignment already exists');
     });
 
     it('should handle API error with 401 status code', async () => {
-        const mockEvent = { target: { classList: {contains: () => true } } };
+        const mockEvent = {target: {classList: {contains: () => true}}};
         const mockDateString = "2025-03-06"
         const mockData = {
             title: 'Assignment 1',
@@ -271,13 +493,13 @@ describe('addAssignment', () => {
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
-            .reply(401, { error: "Unauthorized" });
+            .reply(401, {error: "Unauthorized"});
 
         await expect(addAssignment('auth-token', mockEvent, true)).rejects.toThrow('Error while adding assignment: Unauthorized');
     });
 
     it('should handle API error with 500 status code', async () => {
-        const mockEvent = { target: { classList: {contains: () => true } } };
+        const mockEvent = {target: {classList: {contains: () => true}}};
         const mockDateString = "2025-03-06"
         const mockData = {
             title: 'Assignment 1',
@@ -302,7 +524,7 @@ describe('addAssignment', () => {
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
-            .reply(500, { error: "Internal Server Error" });
+            .reply(500, {error: "Internal Server Error"});
 
         await expect(addAssignment('auth-token', mockEvent, true)).rejects.toThrow('Error while adding assignment: Internal Server Error');
     });
@@ -324,15 +546,7 @@ describe('updateAssignment', () => {
 
         nock('http://127.0.0.1:3000')
             .put('/api/assignment/update', {
-                "_id": "67ca23c4302d5ff21cf74fdb",
-                "userId": "9ffdbby3wwyr4qeabpzq",
-                "title": "Test",
-                "dueDate": "13.03.2025",
-                "subject": "math",
-                "status": "open",
-                "priority": "lowest",
-                "__v": 0,
-                "expire": null
+                assignment: mockAssignment
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
@@ -343,6 +557,225 @@ describe('updateAssignment', () => {
     });
 
     it('should handle API error with status code 404', async () => {
+        const mockAssignment = {
+            "_id": "67ca23c4302d5ff21cf74fdb",
+            "userId": "9ffdbby3wwyr4qeabpzq",
+            "title": "Test",
+            "dueDate": "13.03.2025",
+            "subject": "math",
+            "status": "open",
+            "priority": "lowest",
+            "__v": 0,
+            "expire": null
+        };
 
+        nock('http://127.0.0.1:3000')
+            .put('/api/assignment/update', {
+                assignment: mockAssignment
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader("Content-Type", "application/json")
+            .reply(404, {error: "Assignment not found"});
+
+        await expect(updateAssignment('auth-token', mockAssignment, true)).rejects.toThrow('Error while updating assignment: Assignment not found');
+    });
+
+    it('should handle API error with status code 401', async () => {
+        const mockAssignment = {
+            "_id": "67ca23c4302d5ff21cf74fdb",
+            "userId": "9ffdbby3wwyr4qeabpzq",
+            "title": "Test",
+            "dueDate": "13.03.2025",
+            "subject": "math",
+            "status": "open",
+            "priority": "lowest",
+            "__v": 0,
+            "expire": null
+        };
+
+        nock('http://127.0.0.1:3000')
+            .put('/api/assignment/update', {
+                assignment: mockAssignment
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader("Content-Type", "application/json")
+            .reply(401, {error: "Assignment not found"});
+
+        await expect(updateAssignment('auth-token', mockAssignment, true)).rejects.toThrow('Error while updating assignment: Unauthorized');
+    });
+
+    it('should handle API error with status code 500', async () => {
+        const mockAssignment = {
+            "_id": "67ca23c4302d5ff21cf74fdb",
+            "userId": "9ffdbby3wwyr4qeabpzq",
+            "title": "Test",
+            "dueDate": "13.03.2025",
+            "subject": "math",
+            "status": "open",
+            "priority": "lowest",
+            "__v": 0,
+            "expire": null
+        };
+
+        nock('http://127.0.0.1:3000')
+            .put('/api/assignment/update', {
+                assignment: mockAssignment
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader("Content-Type", "application/json")
+            .reply(500, {error: "Assignment not found"});
+
+        await expect(updateAssignment('auth-token', mockAssignment, true)).rejects.toThrow('Error while updating assignment: Internal Server Error');
+    });
+});
+
+describe('deleteAssignment', () => {
+    it('should make a successful API call', async () => {
+        const mockAssignments = [
+            {
+                "_id": "67ca23c4302d5ff21cf74fdb",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test",
+                "dueDate": "13.03.2025",
+                "subject": "math",
+                "status": "inProgress",
+                "priority": "lowest",
+                "__v": 0,
+                "expire": null
+            },
+            {
+                "_id": "67ca25c4602d5ff21cf74fba",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test 2",
+                "dueDate": "15.03.2025",
+                "subject": "german",
+                "status": "open",
+                "priority": "medium",
+                "__v": 0,
+                "expire": null
+            },
+        ];
+
+        nock('http://127.0.0.1:3000')
+            .delete('/api/assignment/delete', {
+                assignment: mockAssignments[0]
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader('Content-Type', 'application/json')
+            .reply(200);
+
+        const result = await deleteAssignment('auth-token', 0, mockAssignments, true);
+        expect(result).toBe(true);
+    });
+
+    it('should handle API error with status code 404', async () => {
+        const mockAssignments = [
+            {
+                "_id": "67ca23c4302d5ff21cf74fdb",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test",
+                "dueDate": "13.03.2025",
+                "subject": "math",
+                "status": "inProgress",
+                "priority": "lowest",
+                "__v": 0,
+                "expire": null
+            },
+            {
+                "_id": "67ca25c4602d5ff21cf74fba",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test 2",
+                "dueDate": "15.03.2025",
+                "subject": "german",
+                "status": "open",
+                "priority": "medium",
+                "__v": 0,
+                "expire": null
+            },
+        ];
+
+        nock('http://127.0.0.1:3000')
+            .delete('/api/assignment/delete', {
+                assignment: mockAssignments[0]
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader('Content-Type', 'application/json')
+            .reply(404, { error: "Assignment not found" });
+
+        await expect(deleteAssignment('auth-token', 0, mockAssignments, true)).rejects.toThrow("Error while deleting assignment: Assignment not found");
+    });
+
+    it('should handle API error with status code 401', async () => {
+        const mockAssignments = [
+            {
+                "_id": "67ca23c4302d5ff21cf74fdb",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test",
+                "dueDate": "13.03.2025",
+                "subject": "math",
+                "status": "inProgress",
+                "priority": "lowest",
+                "__v": 0,
+                "expire": null
+            },
+            {
+                "_id": "67ca25c4602d5ff21cf74fba",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test 2",
+                "dueDate": "15.03.2025",
+                "subject": "german",
+                "status": "open",
+                "priority": "medium",
+                "__v": 0,
+                "expire": null
+            },
+        ];
+
+        nock('http://127.0.0.1:3000')
+            .delete('/api/assignment/delete', {
+                assignment: mockAssignments[0]
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader('Content-Type', 'application/json')
+            .reply(401, { error: "Unauthorized" });
+
+        await expect(deleteAssignment('auth-token', 0, mockAssignments, true)).rejects.toThrow("Error while deleting assignment: Unauthorized");
+    });
+
+    it('should handle API error with status code 500', async () => {
+        const mockAssignments = [
+            {
+                "_id": "67ca23c4302d5ff21cf74fdb",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test",
+                "dueDate": "13.03.2025",
+                "subject": "math",
+                "status": "inProgress",
+                "priority": "lowest",
+                "__v": 0,
+                "expire": null
+            },
+            {
+                "_id": "67ca25c4602d5ff21cf74fba",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test 2",
+                "dueDate": "15.03.2025",
+                "subject": "german",
+                "status": "open",
+                "priority": "medium",
+                "__v": 0,
+                "expire": null
+            },
+        ];
+
+        nock('http://127.0.0.1:3000')
+            .delete('/api/assignment/delete', {
+                assignment: mockAssignments[0]
+            })
+            .matchHeader('Authorization', 'Bearer auth-token')
+            .matchHeader('Content-Type', 'application/json')
+            .reply(500, { error: "Internal Server Error" });
+
+        await expect(deleteAssignment('auth-token', 0, mockAssignments, true)).rejects.toThrow("Error while deleting assignment: Internal Server Error");
     });
 });

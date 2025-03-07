@@ -174,15 +174,13 @@ export async function addAssignment(authToken, e, testing = false) {
  */
 export async function updateAssignment(authToken, assignment, testing = false) {
     if (authToken) {
-        const body = JSON.stringify(assignment);
-
         const response = await fetch('http://127.0.0.1:3000/api/assignment/update', {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: body
+            body: JSON.stringify({assignment: assignment})
         });
 
         if (response.status === 200) {
@@ -243,18 +241,30 @@ export async function deleteAssignment(authToken, index, assignments, testing = 
         if (response.status === 200) {
             return true;
         } else if (response.status === 404) {
-            const err = await response.json();
-            if (!testing) newNotification("error", "Assignment not found", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Assignment not found", err.error);
+                return false;
+            }
+
+            throw new Error("Error while deleting assignment: Assignment not found");
         } else if (response.status === 401) {
-            const err = await response.json();
-            if (!testing) newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return false;
+            }
+
+            throw new Error("Error while deleting assignment: Unauthorized");
         } else if (response.status === 500) {
-            const err = await response.json();
-            if (!testing) newNotification("error", "Error while deleting your assignment", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Error while deleting your assignment", err.error);
+                return false;
+            }
+
+            throw new Error("Error while deleting assignment: Internal Server Error");
         } else {
             if (!testing) newNotification("error", "Unable to delete assignment", "There was an unexpected error. Please try again!");
             return false;
