@@ -311,26 +311,28 @@ describe('addAssignment', () => {
 describe('updateAssignment', () => {
     it('should make a successful API call', async () => {
         const mockAssignment = {
-            _id: "67ca23c4302d5ff21cf74fdb",
-            userId: "9ffdbby3wwyr4qeabpzq",
-            title: "Test",
-            dueDate: "13.03.2025",
-            subject: "math",
-            status: "inProgress",
-            priority: "lowest",
-            __v: 0
+            "_id": "67ca23c4302d5ff21cf74fdb",
+            "userId": "9ffdbby3wwyr4qeabpzq",
+            "title": "Test",
+            "dueDate": "13.03.2025",
+            "subject": "math",
+            "status": "open",
+            "priority": "lowest",
+            "__v": 0,
+            "expire": null
         };
 
         nock('http://127.0.0.1:3000')
             .put('/api/assignment/update', {
-                _id: "67ca23c4302d5ff21cf74fdb",
-                userId: "9ffdbby3wwyr4qeabpzq",
-                title: "Test",
-                dueDate: "13.03.2025",
-                subject: "math",
-                status: "inProgress",
-                priority: "lowest",
-                __v: 0
+                "_id": "67ca23c4302d5ff21cf74fdb",
+                "userId": "9ffdbby3wwyr4qeabpzq",
+                "title": "Test",
+                "dueDate": "13.03.2025",
+                "subject": "math",
+                "status": "open",
+                "priority": "lowest",
+                "__v": 0,
+                "expire": null
             })
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader("Content-Type", "application/json")
@@ -338,5 +340,9 @@ describe('updateAssignment', () => {
 
         const result = await updateAssignment('auth-token', mockAssignment, true);
         expect(result).toBe(true);
+    });
+
+    it('should handle API error with status code 404', async () => {
+
     });
 });

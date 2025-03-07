@@ -174,13 +174,15 @@ export async function addAssignment(authToken, e, testing = false) {
  */
 export async function updateAssignment(authToken, assignment, testing = false) {
     if (authToken) {
+        const body = JSON.stringify(assignment);
+
         const response = await fetch('http://127.0.0.1:3000/api/assignment/update', {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ assignment })
+            body: body
         });
 
         if (response.status === 200) {
