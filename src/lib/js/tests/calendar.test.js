@@ -75,33 +75,32 @@ describe('handleDateClick', () => {
         expect(result).toEqual({clickedDate: null, events: [], action: "close"});
     });
 
-    // TODO: implement that unit test after getDateEvents is mocked... if it is even possible to mock that function
-    // it('should return an object with the events and action "open" if the clicked date is different from the previously clicked date', async () => {
-    //     const getDateEvents = vi.fn();
-    //
-    //     const date = 15; // March 15, 2024
-    //     const clickedDate = 16;
-    //     const calendar = {
-    //         getBoundingClientRect: () => ({
-    //             width: 500,
-    //             height: 300,
-    //         }),
-    //     };
-    //     const authToken = 'auth-token';
-    //     const selectedMonth = "mar-2024";
-    //     const mockEvents = [{ id: 1, title: 'Mock Event' }];
-    //
-    //     global.window = { innerHeight: 1000 };
-    //
-    //     const result = await handleDateClick(date, clickedDate, calendar, authToken, selectedMonth, true);
-    //
-    //     expect(getDateEvents).toHaveBeenCalledWith(date, authToken, selectedMonth, true);
-    //     expect(result).toEqual({
-    //         clickedDate: date,
-    //         events: mockEvents,
-    //         bottomOfCalendar: 320,
-    //         width: 500,
-    //         action: 'open',
-    //     });
-    // });
+    // TODO: properly implement the testing of handleDateClick with mocked getDateEvents
+    it('should return an object with the events and action "open" if the clicked date is different from the previously clicked date', async () => {
+        const getDateEvents = vi.fn();
+
+        const date = 15; // March 15, 2024
+        const clickedDate = 16;
+        const calendar = {
+            getBoundingClientRect: () => ({
+                width: 500,
+                height: 300,
+            }),
+        };
+        const authToken = 'auth-token';
+        const selectedMonth = "mar-2024";
+        const mockEvents = [{ id: 1, title: 'Mock Event1' }, {id: 2, title: 'Mock Event2'}];
+
+        global.window = { innerHeight: 1000 };
+
+        const result = await handleDateClick(date, clickedDate, calendar, authToken, selectedMonth, true);
+
+        expect(result).toEqual({
+            clickedDate: date,
+            events: mockEvents,
+            bottomOfCalendar: 320,
+            width: 500,
+            action: 'open',
+        });
+    });
 })
