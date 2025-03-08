@@ -307,7 +307,7 @@
      * @returns {Promise<void>}
      */
     async function dateClickHelper(date, event) {
-        const dateClick = await handleDateClick(date, clickedDate, calendar, event, authToken, selectedMonth);
+        const dateClick = await handleDateClick(date, clickedDate, calendar, authToken, selectedMonth);
         if (dateClick.action === "open") {
             bottomOfCalendar = dateClick.bottomOfCalendar;
             events = dateClick.events;
@@ -348,6 +348,7 @@
      * @returns {void}
      */
     function closeEventModalHandler() {
+        events = null;
         clickedDate = null;
         calendar.style.borderTopRightRadius = '6px';
         calendar.style.borderTopLeftRadius = '6px';

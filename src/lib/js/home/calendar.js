@@ -73,7 +73,6 @@ export function getMonthData(selectedMonth) {
  * calculates the bottom position of the calendar to open the event modal.
  *
  * @param {number} date - The date that was clicked.
- * @param {Event} event - The click event object.
  * @param {HTMLElement} calendar - The calendar element.
  * @param {number|null} clickedDate - The currently selected date, or null if no date is selected.
  * @param {string} authToken - The authentication token for API requests.
@@ -84,10 +83,7 @@ export function getMonthData(selectedMonth) {
  *                            for that date, the bottom position of the calendar, and the action
  *                            to be taken ("open" or "close").
  */
-export async function handleDateClick(date, event, calendar, clickedDate, authToken, selectedMonth, testing = false) {
-    console.log(date);
-    console.log(clickedDate);
-
+export async function handleDateClick(date, clickedDate, calendar, authToken, selectedMonth, testing = false) {
     if (clickedDate === date) {
         return {clickedDate: null, events: [], action: "close"};
     } else {

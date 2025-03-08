@@ -10,6 +10,8 @@ export default defineConfig({
         globals: true,
         environment: 'jsdom',
         setupFiles: ['./src/setupTests.js'],
+        mockReset: true,
+        restoreMocks: true,
     },
     resolve: {
         alias: {
