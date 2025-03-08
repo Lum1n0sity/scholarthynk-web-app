@@ -19,25 +19,6 @@ export function getAuthToken() {
 }
 
 /**
- * Set the auth token, both in the `authToken` store and in
- * `localStorage` if in a browser environment.
- *
- * @param {string} [token] - The token to set, or `undefined` to remove the
- * token from storage.
- */
-export function setAuthToken(token) {
-    if (browser) {
-        if (token) {
-            localStorage.setItem('authToken', token);
-        } else {
-            localStorage.removeItem('authToken');
-        }
-    }
-
-    authToken = token;
-}
-
-/**
  * Logs the user out by removing the auth token from storage and redirecting
  * them to the login page.
  *
