@@ -105,12 +105,13 @@ export async function handleDateClick(date, clickedDate, calendar, authToken, se
  *
  * @param {string} selectedMonth - The selected month in the format "Month-YYYY".
  *
+ * @param testing
  * @returns {string} The month and year of the month before the given month.
  */
-export function goBackMonth(selectedMonth) {
+export function goBackMonth(selectedMonth, testing = false) {
     if (!selectedMonth) {
         console.error("Invalid selectedMonth: ", selectedMonth);
-        newNotification("error", "Invalid selectedMonth", "Invalid selectedMonth: " + selectedMonth);
+        if(!testing) newNotification("error", "Invalid selectedMonth", "Invalid selectedMonth: " + selectedMonth);
         return "";
     }
 
@@ -118,6 +119,7 @@ export function goBackMonth(selectedMonth) {
     const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
     const yearIndex = parseInt(year);
 
+    const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
 
@@ -197,7 +199,7 @@ export function getMonthsForNextYears() {
 export function getFullDate(date, selectedMonth) {
     const [month, year] = selectedMonth.split('-');
     const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-    const currentYear = new Date().getFullYear();
+    const currentYear = new Date(year).getFullYear();
 
     const formattedDay = date < 10 ? `0${date}` : date;
     const formattedMonth = monthIndex < 10 ? `0${monthIndex + 1}` : monthIndex + 1;
@@ -235,13 +237,17 @@ export async function getDateEvents(date, authToken, selectedMonth, testing = fa
                 newNotification("error", "Invalid date", err.error);
                 return null;
             }
-        } else if (response.status === 409) {
+
+            throw new Error("Error while loading your events: Invalid date");
+        } else if (response.status === 401) {
             if (!testing) {
                 const err = await response.json();
                 newNotification("error", "Unauthorized", err.error);
                 setTimeout(() => {logout();}, 5000);
                 return null;
             }
+
+            throw new Error("Error while loading your events: Unauthorized");
         } else if (response.status === 500) {
             if (!testing) {
                 const err = await response.json();
@@ -249,6 +255,8 @@ export async function getDateEvents(date, authToken, selectedMonth, testing = fa
                 newNotification("error", "Error while loading your events", err.error);
                 return null;
             }
+
+            throw new Error("Error while loading your events: Internal Server Error");
         } else {
             if (!testing) newNotification("error", "Unable to load your events", "There was an unexpected error. Please try again!");
             return null;
@@ -286,9 +294,10 @@ export function handleNewEventClick() {
  * @param {string} selectedMonth - The currently selected month in the format "Month-YYYY".
  * @param {string} authToken - The authentication token for the API request.
  *
+ * @param testing
  * @returns {Promise<boolean>} A boolean indicating whether the event was successfully added.
  */
-export async function addEvent(event, newEventName, clickedDate, selectedMonth, authToken) {
+export async function addEvent(event, newEventName, clickedDate, selectedMonth, authToken, testing = false) {
     if (event.type === "blur" || event.key === "Enter") {
         if (newEventName && authToken) {
             const response = await fetch('http://127.0.0.1:3000/api/event/new', {
@@ -303,30 +312,42 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
             if (response.status === 200) {
                 return true;
             } else if (response.status === 400) {
-                const err = await response.json();
-                newNotification("error", "Invalid input", err.error);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Invalid input", err.error);
+                    return false;
+                }
+
+                throw new Error("Error while adding your event: Invalid input");
             } else if (response.status === 409) {
-                const err = await response.json();
-                newNotification("error", "Event already exists", err.error);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Event already exists", err.error);
+                    return false;
+                }
+
+                throw new Error("Error while adding your event: Event already exists");
             } else if (response.status === 401) {
-                const err = await response.json();
-                newNotification("error", "Unauthorized", err.error);
-                setTimeout(() => {logout();}, 5000);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Unauthorized", err.error);
+                    setTimeout(() => {logout();}, 5000);
+                    return false;
+                }
+
+                throw new Error("Error while adding your event: Unauthorized");
             } else if (response.status === 500) {
-                const err = await response.json();
-                newNotification("error", "Error while adding your event", err.error);
-                return false;
+                if (!testing) {
+                    const err = await response.json();
+                    newNotification("error", "Error while adding your event", err.error);
+                    return false;
+                }
+
+                throw new Error("Error while adding your event: Internal Server Error");
             } else {
-                newNotification("error", "Unable to add your event", "There was an unexpected error. Please try again!");
+                if(!testing) newNotification("error", "Unable to add your event", "There was an unexpected error. Please try again!");
                 return false;
             }
-        } else if (!authToken) {
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return false;
         }
     } else if (event.key === "Escape") {
         return false;
@@ -346,9 +367,10 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
  * @param {string} selectedMonth - The currently selected month in the format "Month-YYYY".
  * @param {string} authToken - The authentication token for API requests.
  *
+ * @param testing
  * @returns {Promise<boolean>} A boolean indicating whether the event was successfully deleted.
  */
-export async function deleteEvent(event, clickedDate, selectedMonth, authToken) {
+export async function deleteEvent(event, clickedDate, selectedMonth, authToken, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/event/delete', {
             method: 'DELETE',
@@ -362,29 +384,41 @@ export async function deleteEvent(event, clickedDate, selectedMonth, authToken) 
         if (response.status === 200) {
             return true;
         } else if (response.status === 400) {
-            const err = await response.json();
-            newNotification("error", "Invalid input", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Invalid input", err.error);
+                return false;
+            }
+
+            throw new Error("Error while deleting event: Invalid input");
         } else if (response.status === 404) {
-            const err = await response.json();
-            newNotification("error", "Event not found", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Event not found", err.error);
+                return false;
+            }
+
+            throw new Error("Error while deleting event: Event not found");
         } else if (response.status === 401) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return false;
+            }
+
+            throw new Error("Error while deleting event: Unauthorized");
         } else if (response.status === 500) {
-            const err = await response.json();
-            newNotification("error", "Error while deleting your event", err.error);
-            return false;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Error while deleting your event", err.error);
+                return false;
+            }
+
+            throw new Error("Error while deleting event: Internal Server Error");
         } else {
             newNotification("error", "Unable to delete your event", "There was an unexpected error. Please try again!");
             return false;
         }
-    } else {
-        newNotification("error", "Unauthorized", err.error);
-        setTimeout(() => {logout();}, 5000);
-        return false;
     }
 }
