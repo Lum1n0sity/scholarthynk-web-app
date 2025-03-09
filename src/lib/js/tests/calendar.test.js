@@ -1,6 +1,5 @@
 import nock from 'nock';
 import {describe, it, expect, afterEach, vi} from 'vitest';
-
 import {
     getCurrentDate,
     getFormattedCurrentDate,
