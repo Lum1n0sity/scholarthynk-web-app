@@ -23,6 +23,7 @@ export function newNotificationTN(callback) {
  * Fetches all notes from the API and returns the 6 most recently edited ones.
  *
  * @param {string} authToken - The authentication token to use for the request.
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  *
  * @returns {Promise<Object[]>} An array of objects, each representing a note.
  *                              Each object has the following properties: id, title, content, lastEdited.

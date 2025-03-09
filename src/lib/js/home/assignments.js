@@ -33,6 +33,9 @@ export const newAssignmentData = writable({
 /**
  * Fetches all assignments from the API and updates the store.
  *
+ * @param {string} authToken The authentication token to use for the request.
+ * @param {string} sortType The type of sorting to apply to the assignments.
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<void>}
  */
 export async function getAssignments(authToken, sortType, testing = false) {
@@ -87,8 +90,7 @@ export async function getAssignments(authToken, sortType, testing = false) {
  *
  * @param {string} authToken The authentication token to use for the request.
  * @param {KeyboardEvent} e The keyboard event that triggered the function.
- *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<void>}
  */
 export async function addAssignment(authToken, e, testing = false) {
@@ -168,8 +170,7 @@ export async function addAssignment(authToken, e, testing = false) {
  *
  * @param {string} authToken The authentication token to use for the request.
  * @param {assignment} assignment The assignment to update.
- *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<void>}
  */
 export async function updateAssignment(authToken, assignment, testing = false) {
@@ -222,9 +223,8 @@ export async function updateAssignment(authToken, assignment, testing = false) {
  *
  * @param authToken
  * @param {number} index The index of the assignment in the `assignments` store.
- *
  * @param assignments
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<void>}
  */
 export async function deleteAssignment(authToken, index, assignments, testing = false) {

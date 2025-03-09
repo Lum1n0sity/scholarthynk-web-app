@@ -78,7 +78,7 @@ export function getMonthData(selectedMonth) {
  * @param {string} authToken - The authentication token for API requests.
  * @param {string} selectedMonth - The currently selected month in the format "Month-YYYY".
  *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<Object>} An object containing the new clicked date, the list of events
  *                            for that date, the bottom position of the calendar, and the action
  *                            to be taken ("open" or "close").
@@ -105,7 +105,7 @@ export async function handleDateClick(date, clickedDate, calendar, authToken, se
  *
  * @param {string} selectedMonth - The selected month in the format "Month-YYYY".
  *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {string} The month and year of the month before the given month.
  */
 export function goBackMonth(selectedMonth, testing = false) {
@@ -214,7 +214,7 @@ export function getFullDate(date, selectedMonth) {
  * @param {string} authToken - The authentication token for the API request.
  * @param {string} selectedMonth - The month and year in the format "Month-YYYY".
  *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<Array<Object>|null>} The list of events for the given date, or null if there is an error.
  */
 export async function getDateEvents(date, authToken, selectedMonth, testing = false) {
@@ -294,7 +294,7 @@ export function handleNewEventClick() {
  * @param {string} selectedMonth - The currently selected month in the format "Month-YYYY".
  * @param {string} authToken - The authentication token for the API request.
  *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<boolean>} A boolean indicating whether the event was successfully added.
  */
 export async function addEvent(event, newEventName, clickedDate, selectedMonth, authToken, testing = false) {
@@ -367,7 +367,7 @@ export async function addEvent(event, newEventName, clickedDate, selectedMonth, 
  * @param {string} selectedMonth - The currently selected month in the format "Month-YYYY".
  * @param {string} authToken - The authentication token for API requests.
  *
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<boolean>} A boolean indicating whether the event was successfully deleted.
  */
 export async function deleteEvent(event, clickedDate, selectedMonth, authToken, testing = false) {

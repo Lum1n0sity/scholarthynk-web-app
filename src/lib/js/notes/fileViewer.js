@@ -13,7 +13,7 @@ export function newNotificationTFV(callback) {
  * @param {string} folder the name of the folder to fetch items from
  * @param {string[]} path the path to the parent folder
  * @param {string} authToken the authentication token
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<{folders: string[], files: string[]}>} an object containing the folders and files in the folder
  */
 export async function getFVItems(folder, path, authToken, testing = false) {
@@ -60,7 +60,7 @@ export async function getFVItems(folder, path, authToken, testing = false) {
  * @param {string} selectedItemName the name of the folder to be deleted
  * @param {string[]} path the path to the parent folder
  * @param {string} authToken the authentication token
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<boolean>} `true` if the folder was deleted successfully, `false` otherwise
  */
 export async function deleteFolder(selectedItemName, path, authToken, testing = false) {
@@ -121,7 +121,7 @@ export async function deleteFolder(selectedItemName, path, authToken, testing = 
  * @param {string} newFolderName the name of the new folder
  * @param {string[]} path the path to the parent folder
  * @param {string} authToken the authentication token
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<boolean>} `true` if the folder was created successfully, `false` otherwise
  */
 export async function createFolder(newFolderName, path, authToken, testing = false) {
@@ -181,7 +181,7 @@ export async function createFolder(newFolderName, path, authToken, testing = fal
  * Create a new note in the file viewer.
  * @param {string[]} path the path to the parent folder
  * @param {string} authToken the authentication token
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<boolean>} `true` if the creation was successful, `false` otherwise
  */
 export async function createNote(path, authToken, testing = false) {
@@ -235,7 +235,7 @@ export async function createNote(path, authToken, testing = false) {
  * @param {string} selectedItem the name of the item to be renamed
  * @param {string[]} path the path to the parent folder
  * @param {string} authToken the authentication token
- * @param testing
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<boolean>} `true` if the rename was successful, `false` otherwise
  */
 export async function renameFVItem(newItemName, selectedItem, path, authToken, testing = false) {
