@@ -209,6 +209,10 @@ describe('getFullDate', () => {
 });
 
 describe('getDateEvents', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
    it('should make a successful API call and return an array of events', async () => {
        const authToken = 'auth-token';
        const date = 15;
@@ -276,6 +280,10 @@ describe('getDateEvents', () => {
 });
 
 describe('addEvent', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API call when event is blur', async () => {
         const event = {type: 'blur'};
         const newEventName = 'New Event';
@@ -399,6 +407,10 @@ describe('addEvent', () => {
 });
 
 describe('deleteEvent', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API call', async () => {
         const clickedDate = 15;
         const selectedMonth = 'mar-2024';

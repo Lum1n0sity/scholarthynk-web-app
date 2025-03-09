@@ -3,6 +3,10 @@ import {describe, it, expect, afterEach, vi} from 'vitest';
 import {getFVItems, deleteFolder, createFolder, createNote, renameFVItem} from "$lib/js/notes/fileViewer.js";
 
 describe('getFVItems', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API request and return the items', async () => {
         const authToken = 'auth-token';
         const path = ["root", "folder1"];
@@ -48,6 +52,10 @@ describe('getFVItems', () => {
 });
 
 describe('deleteFolder', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API request and return true', async () => {
         const authToken = 'auth-token';
         const path = ["root", "folder1"];
@@ -121,6 +129,10 @@ describe('deleteFolder', () => {
 });
 
 describe('createFolder', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API request and return true', async () => {
         const authToken = 'auth-token';
         const path = ["root", "folder1"];
@@ -194,6 +206,10 @@ describe('createFolder', () => {
 });
 
 describe('createNote', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should make a successful API request and return true', async () => {
         const authToken = 'auth-token';
         const path = ["root", "folder1"];
@@ -249,6 +265,10 @@ describe('createNote', () => {
 });
 
 describe('renameFVItem', () => {
+    afterEach(() => {
+        nock.cleanAll();
+    });
+
     it('should return false if new name is empty', async () => {
         const authToken = 'auth-token';
         const path = ["root", "folder1"];

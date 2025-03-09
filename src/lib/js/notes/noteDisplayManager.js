@@ -33,9 +33,10 @@ export function newNotificationNDM(callback) {
  *
  * @param {string} parent The name of the parent folder.
  * @param {string} noteId The unique identifier of the note.
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<string[]>} The path of the note as an array of strings.
  */
-export async function getNotePath(parent, noteId) {
+export async function getNotePath(parent, noteId, testing = false) {
     if (!parent) {
         return ["root"];
     }
@@ -52,14 +53,22 @@ export async function getNotePath(parent, noteId) {
         const data = await response.json();
         return data.path;
     } else if (response.status === 401) {
-        const err = await response.json();
-        newNotification("error", "Unauthorized", err.error);
-        setTimeout(() => {logout();}, 5000);
-        return [];
+        if (!testing) {
+            const err = await response.json();
+            newNotification("error", "Unauthorized", err.error);
+            setTimeout(() => {logout();}, 5000);
+            return [];
+        }
+
+        throw new Error("Error while getting note path: Unauthorized");
     } else if (response.status === 500) {
-        const err = await response.json();
-        newNotification("error", "Error while loading note directory", err.error);
-        return [];
+        if (!testing) {
+            const err = await response.json();
+            newNotification("error", "Error while loading note directory", err.error);
+            return [];
+        }
+
+        throw new Error("Error while getting note path: Internal Server Error");
     } else {
         newNotification("error", "Unable to load note directory", "There was an unexpected error. Please try again!");
         return [];
