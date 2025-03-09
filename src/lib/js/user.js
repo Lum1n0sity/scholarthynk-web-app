@@ -12,10 +12,11 @@ export function newNotificationU(callback) {
  * Fetches the user's data from the server.
  *
  * @param {string} authToken - The user's authentication token.
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<Object>} A promise that resolves to an object containing
  * the user's `username` and `email`, or an empty object if the request fails.
  */
-export async function getUserData(authToken) {
+export async function getUserData(authToken, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/user/data', {
             method: 'GET',
@@ -29,20 +30,32 @@ export async function getUserData(authToken) {
             const data = await response.json();
             return {username: data.user.name, email: data.user.email};
         } else if (response.status === 401) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return {};
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return {};
+            }
+
+            throw new Error("Error while loading user data: Unauthorized");
         } else if (response.status === 404) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return {};
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return {};
+            }
+
+            throw new Error("Error while loading user data: User not found");
         } else if (response.status === 500) {
-            const err = await response.json();
-            newNotification("error", "Error while loading user data", "You are going to be logged out. Please try again.");
-            setTimeout(() => {logout();}, 5000);
-            return {};
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Error while loading user data", "You are going to be logged out. Please try again.");
+                setTimeout(() => {logout();}, 5000);
+                return {};
+            }
+
+            throw new Error("Error while loading user data: Internal Server Error");
         } else {
             newNotification("error", "Unable to load user data", "There was an unexpected error. Please try again.");
             setTimeout(() => {logout();}, 5000);
@@ -54,9 +67,10 @@ export async function getUserData(authToken) {
 /**
  * Fetches the user's profile picture from the server.
  * @param {string} authToken the user's authentication token
+ * @param {boolean} testing A flag to indicate if the function is being called for testing purposes.
  * @returns {Promise<string>} a URL pointing to the user's profile picture, or null if the request fails
  */
-export async function getProfilePic(authToken) {
+export async function getProfilePic(authToken, testing = false) {
     if (authToken) {
         const response = await fetch('http://127.0.0.1:3000/api/profilePic/get', {
             method: 'GET',
@@ -69,18 +83,19 @@ export async function getProfilePic(authToken) {
         if (response.status === 200) {
             const imageBlob = await response.blob();
             return URL.createObjectURL(imageBlob);
-
         } else if (response.status === 401) {
-            const err = await response.json();
-            newNotification("error", "Unauthorized", err.error);
-            setTimeout(() => {logout();}, 5000);
-            return null;
+            if (!testing) {
+                const err = await response.json();
+                newNotification("error", "Unauthorized", err.error);
+                setTimeout(() => {logout();}, 5000);
+                return null;
+            }
+
+            throw new Error("Error while loading profile picture: Unauthorized");
         } else {
             newNotification("error", "Unable to load profile picture", "There was an unexpected error while loading your profile picture. Please try again.");
             return null;
         }
-    } else {
-        window.location.href = '/login';
     }
 }
 
