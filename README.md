@@ -26,3 +26,10 @@ npm run build
 ```
 
 You can preview the production build with `npm run preview`.
+
+## Contributing
+If you would like to contribute to Scholarthynk, please fork the repository and submit a pull request.
+
+## License
+This project is licensed under the MIT License. 
+[MIT](https://choosealicense.com/licenses/mit/)
