@@ -25,7 +25,7 @@ npm run dev
 # or start the server and open the app in a new browser tab
 npm run dev -- --open
 ```
-The application will be accessible at http://localhost:3000.
+The application will be accessible at http://localhost:5173.
 
 ## Building
 
