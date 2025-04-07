@@ -474,6 +474,7 @@
         let success = await updateNote(authToken, noteTitle, originalTitle, noteContent, path);
         if (success) {
             await getNoteHelper(noteTitle, false);
+            newNotificationNotes("info", "Saved", "Note saved successfully!");
         }
     }
 
