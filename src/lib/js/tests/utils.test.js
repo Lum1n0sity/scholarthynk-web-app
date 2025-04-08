@@ -21,4 +21,9 @@ describe('capitalizeFirstLetter', () => {
        const result = capitalizeFirstLetter('hello');
        expect(result).toBe('Hello');
    });
+
+   it('should return an empty string if the input string is empty', () => {
+       const result = capitalizeFirstLetter('');
+       expect(result).toBe('');
+   });
 });
