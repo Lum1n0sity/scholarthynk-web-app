@@ -1,5 +1,5 @@
 import {describe, it, expect, afterEach, vi, beforeEach} from 'vitest';
-import {getFullCurrentDate, formatDate} from "$lib/js/utils.js";
+import {getFullCurrentDate, formatDate, capitalizeFirstLetter} from "$lib/js/utils.js";
 
 describe('getFullCurrentDate', () => {
     it('should return the current date in the format "DD.MM.YYYY"', () => {
@@ -15,3 +15,10 @@ describe('formatDate', () => {
         expect(formattedDate).toBe('01.01.2025');
     });
 })
+
+describe('capitalizeFirstLetter', () => {
+   it('should capitalize the first letter of the given string', () => {
+       const result = capitalizeFirstLetter('hello');
+       expect(result).toBe('Hello');
+   });
+});

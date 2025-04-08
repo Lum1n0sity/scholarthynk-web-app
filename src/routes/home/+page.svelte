@@ -30,7 +30,7 @@
         newNotificationTC
     } from "$lib/js/home/calendar.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
-    import {getFullCurrentDate, formatDate} from "$lib/js/utils.js";
+    import {getFullCurrentDate, formatDate, capitalizeFirstLetter} from "$lib/js/utils.js";
     import {getRecentNotes, newNotificationTN} from '$lib/js/home/notes.js';
     import {externalOpenNote, newNotificationNDM, getNotePath, externalCreateNote} from "$lib/js/notes/noteDisplayManager.js";
 
@@ -538,6 +538,7 @@
                                                 <option value="highest">Highest</option>
                                             </select>
                                         </div>
+                                        <p class="assignment-subject">{capitalizeFirstLetter(assignment.subject)}</p>
                                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                                         <!-- svelte-ignore a11y_no_static_element_interactions -->
                                         <span class="material-symbols-rounded delete"
