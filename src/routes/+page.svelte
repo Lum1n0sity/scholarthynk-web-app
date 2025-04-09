@@ -10,8 +10,6 @@
         verifyToken();
     });
 
-    console.log(authToken);
-
     function verifyToken() {
         if (authToken) {
             fetch('http://localhost:3000/api/user/verify', {
