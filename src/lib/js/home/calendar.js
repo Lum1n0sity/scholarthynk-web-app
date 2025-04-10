@@ -89,10 +89,10 @@ export async function handleDateClick(date, clickedDate, calendar, authToken, se
     } else {
         const rect = calendar.getBoundingClientRect();
 
-        // TODO: Mock the getDateEvents function instead of directly using mock data in handleDateClick()
         let events = !testing ? await getDateEvents(date, authToken, selectedMonth, testing) : [{id: 1, title: "Mock Event1"}, {id: 2, title: "Mock Event2"}];
 
-        return {clickedDate: date, events: events, bottomOfCalendar: rect.height + window.innerHeight * 0.02, width: rect.width, action: "open"};
+        // TODO: Look into why the rect.width of the calendar is off by 3.5px
+        return {clickedDate: date, events: events, bottomOfCalendar: rect.height + window.innerHeight * 0.02, width: rect.width - 3.5, action: "open"};
     }
 }
 

@@ -42,7 +42,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 0 14px 2px rgba(0,0,0,0.47);
+  border: 2px solid #B6B6B6;
   border-radius: 6px;
   background-color: #fff;
 }
@@ -125,7 +125,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 0 14px 2px rgba(0,0,0,0.47);
+  border: 2px solid #B6B6B6;
   border-radius: 6px;
   background-color: #fff;
 }
@@ -259,8 +259,8 @@
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
   border-bottom: 2px solid #d9d9d9;
-  box-shadow: 0 -6px 6px 2px rgba(0,0,0,0.38);
-  width: 34.35%;
+  border: 2px solid #B6B6B6;
+  width: 30%;
   height: 30%;
 }
 
@@ -408,7 +408,7 @@
   width: 100%;
   height: 100%;
   border-radius: 6px;
-  box-shadow: 0 0 14px 2px rgba(0,0,0,0.47);
+  border: 2px solid #B6B6B6;
 }
 
 .sort-options-wrapper {
