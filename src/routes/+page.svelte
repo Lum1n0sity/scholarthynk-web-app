@@ -91,8 +91,8 @@
     <div class="footer-landing">
         <div class="footer-left">
             <img src={logo} alt="logo" class="logo-img-landing">
-            <a href="/" class="footer-links">Terms of Service</a>
-            <a href="/" class="footer-links">Privacy Policy</a>
+            <a href="/terms" class="footer-links">Terms of Service</a>
+            <a href="/privacy" class="footer-links">Privacy Policy</a>
         </div>
         <div class="footer-right">
             <a href="https://github.com/Lum1n0sity/scholarthynk-web-app" class="github-link"><img src={github} alt="github logo"></a>
