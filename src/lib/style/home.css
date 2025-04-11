@@ -602,6 +602,10 @@
   height: 100%;
 }
 
+.addAssignment {
+  margin-left: auto;
+}
+
 .assignment-select {
   font-size: 1rem;
   padding: .2vw;
