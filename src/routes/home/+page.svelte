@@ -204,7 +204,7 @@
      */
     function handleExpandClick(index, e) {
         e.stopPropagation();
-        expandedAssignment = toggleAssignmentDetails(expandedAssignment, index, e);
+        !e.target.closest('.assignment-details-wrapper') ? expandedAssignment = toggleAssignmentDetails(expandedAssignment, index, e) : null;
     }
 
     /**
@@ -217,10 +217,6 @@
      * @returns {Promise<void>}
      */
     function toggleAssignmentDetails(expandedAssignment, index, e) {
-        if (e.target.closest('.assignment-details-wrapper')) {
-            return null;
-        }
-
         return expandedAssignment === index ? null : index;
     }
 
