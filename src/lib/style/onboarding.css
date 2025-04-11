@@ -1,14 +1,17 @@
+.body {
+  overflow: hidden;
+}
+
 .nav-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ffffff;
+  background-color: #272727;
   width: 95%;
   height: 12%;
   margin-top: 2.5%;
   border-radius: 10px;
   border: none !important;
-  box-shadow: 0 0 14px 2px rgba(0,0,0,0.25);
 }
 
 .logo {
@@ -26,13 +29,13 @@
 .logo-name {
   font-size: 3rem;
   font-weight: 700;
-  color: #E65A41;
+  color: #fff;
 }
 
 .page-title {
   font-size: 3rem;
   font-weight: 700;
-  color: #E65A41;
+  color: #fff;
   margin-right: 2%;
 }
 
@@ -43,6 +46,7 @@ label {
   width: 50%;
   height: 10%;
   margin-top: 1%;
+  color: #fff;
 }
 
 input[type="checkbox"] {
@@ -59,7 +63,7 @@ input[type="checkbox"] {
   border-radius: 10px;
   position: relative;
   cursor: pointer;
-  background-color: #C2C2C2;
+  background-color: #575757;
   margin-right: 6%;
 }
 
@@ -84,12 +88,12 @@ label {
 }
 
 .tos-pp-wrapper {
-  background-color: #fff;
+  background-color: #272727;
   width: 60%;
   height: 60%;
   margin-top: 5%;
   border-radius: 10px;
-  border: 2px solid #B6B6B6;
+  border: 2px solid #464646;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -100,12 +104,12 @@ label {
   text-align: center;
   font-size: 3rem;
   font-weight: 700;
-  color: #000;
+  color: #fff;
   margin-top: 2%;
 }
 
 .button {
-  background-color: #10222F;
+  background-color: #303030;
   color: white;
   font-size: 2rem;
   width: 30%;
@@ -160,6 +164,7 @@ label {
   border: none;
   outline: none;
   font-weight: bold;
+  color: #fff;
 }
 
 .back p {
@@ -208,8 +213,8 @@ label {
 
 .delete-warning-popup {
   width: 30%;
-  height: 25%;
-  background-color: #fff;
+  height: 30%;
+  background-color: #272727;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -219,17 +224,17 @@ label {
 .popup-title {
   font-size: 3rem;
   font-weight: 700;
-  color: #E65A41;
+  color: #fff;
   margin-top: 3%;
 }
 
 .popup-text {
-  font-size: 2.5rem;
-  font-weight: 500;
-  color: #000;
+  font-size: 2rem;
+  color: #fff;
   margin-top: 3%;
   text-align: center;
   font-weight: semi-bold;
+  width: 90%;
 }
 
 .warning-button-wrapper {
@@ -248,13 +253,13 @@ label {
 }
 
 .continue-delete {
-  background-color: #10222F;
-  color: white;
+  background-color: #fff;
   font-weight: bold;
+  color: #000;
 }
 
 .tos-pp-popup {
-  background-color: #fff;
+  background-color: #272727;
   width: 60%;
   height: 80%;
   border-radius: 10px;
@@ -277,6 +282,7 @@ label {
   text-align: center;
   margin: 0 auto;
   flex-grow: 1;
+  color: #fff;
 }
 
 .close-btn {
@@ -292,10 +298,11 @@ label {
   background: transparent;
   cursor: pointer;
   transition: .5s;
+  color: #fff;
 }
 
 .close-btn:hover {
-  background-color: #eee;
+  background-color: #575757;
 }
 
 .close-btn span {
@@ -310,13 +317,12 @@ label {
   align-items: flex-start;
   justify-content: flex-start;
   border-radius: 6px;
-  border: 1px solid #C2C2C2;
+  border: 1px solid #464646;
 }
 
-.popup-text {
+.popup-text-content {
   font-size: 2rem;
-  font-weight: 500;
-  color: #000;
+  color: #fff;
   margin-top: 2%;
   margin-left: 2%;
   text-align: start;
@@ -324,32 +330,33 @@ label {
   overflow-y: auto;
   margin-bottom: 2%;
 }
-.popup-text::-webkit-scrollbar {
+
+.popup-text-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.popup-text::-webkit-scrollbar-track {
+.popup-text-content::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 8px;
 }
 
-.popup-text::-webkit-scrollbar-thumb {
+.popup-text-content::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 8px;
   cursor: pointer;
 }
 
-.popup-text::-webkit-scrollbar-thumb:hover {
+.popup-text-content::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
 .profile-pic-wrapper {
-  background-color: #fff;
+  background-color: #272727;
   width: 60%;
   height: 60%;
   margin-top: 5%;
   border-radius: 10px;
-  border: 2px solid #B6B6B6;
+  border: 2px solid #464646;
   display: flex;
   flex-direction: column;
   align-items: center;
