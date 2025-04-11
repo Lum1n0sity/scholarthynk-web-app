@@ -777,7 +777,7 @@
             Rename
         </button>
         <button class="fv-context-menu-item" on:click={deleteFolderHelper}>Delete</button>
-        <button class="fv-context-menu-item">Share</button>
+        <button class="fv-context-menu-item" style="border: none">Share</button>
     </div>
 {/if}
 

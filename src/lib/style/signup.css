@@ -8,11 +8,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ffffff;
+  background-color: #272727;
   width: 95%;
   height: 12%;
   margin-top: 2.5%;
   border-radius: 10px;
+  border: none;
 }
 
 .logo {
@@ -30,13 +31,13 @@
 .logo-name {
   font-size: 3rem;
   font-weight: 700;
-  color: #E65A41;
+  color: #fff;
 }
 
 .page-title {
   font-size: 3rem;
   font-weight: 700;
-  color: #E65A41;
+  color: #fff;
   margin-right: 2%;
 }
 
@@ -54,7 +55,7 @@
 }
 
 .input {
-  background-color: #C2C2C2;
+  background-color: #272727;
   border: none;
   outline: none;
   width: 100%;
@@ -68,6 +69,7 @@
 .input-name {
   font-size: 2.7rem;
   font-weight: bold;
+  color: #fff;
 }
 
 .input-wrapper-pw {
@@ -98,17 +100,23 @@
 .show-hide-btn {
   display: flex;
   align-items: center;
-  justify-content: center;    
+  justify-content: center;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
   border: none;
   outline: none;
-  background-color: #C2C2C2;
+  background-color: #272727;
   margin-left: auto;
   width: 13%;
   height: 100%;
-  border-left: 1px solid #000;
+  border-left: 1px solid #fff;
   cursor: pointer;
+  transition: .5s;
+  color: #fff;
+}
+
+.show-hide-btn:hover {
+  background: #575757;
 }
 
 .show-hide-icon {

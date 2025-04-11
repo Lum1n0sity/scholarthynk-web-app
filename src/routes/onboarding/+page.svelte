@@ -500,7 +500,7 @@
                     <span class="material-symbols-rounded">close</span></button>
             </div>
             <div class="popup-content">
-                <p class="popup-text">{@html popupText}</p>
+                <p class="popup-text-content">{@html popupText}</p>
             </div>
         </div>
     </div>
