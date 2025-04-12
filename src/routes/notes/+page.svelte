@@ -602,7 +602,7 @@
             <img src={logo} alt="logo" class="logo-img"/>
             <h1 class="logo-name">SCHOLARTHYNK</h1>
         </div>
-        <div class="button-group-nav-notes">
+        <div class="button-group-nav-notes" style="{!isAdmin ? 'width: 19%;' : ''}">
             {#if isAdmin}
                 <a href="/admin" class="nav">Admin</a>
             {/if}

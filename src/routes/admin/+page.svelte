@@ -5,6 +5,7 @@
     import {getUserData, getProfilePic, displayUserCardHandler, newNotificationU} from "$lib/js/user.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
     import {getFullCurrentDate} from "$lib/js/utils.js";
+    import {goto} from "$app/navigation";
 
     const authToken = getAuthToken();
 
@@ -74,7 +75,10 @@
         let userData = await getUserData(authToken);
         username = userData.username;
         email = userData.email;
-        isAdmin = userData.role === "admin";
+        if (userData.role !== "admin") {
+            goto('/home');
+            newNotification("error", "Unauthorized", "You are not authorized to access the admin page! If you keep trying to do so, your account will be disabled by the system.");
+        }
 
         profilePicture = await getProfilePic(authToken);
     });
