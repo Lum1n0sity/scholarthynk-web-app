@@ -24,9 +24,19 @@ export function getAuthToken() {
  *
  * @returns {void}
  */
-export function logout() {
-    if (browser) {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+export async function logout() {
+    const response = await fetch('http://127.0.0.1:3000/api/user/logout', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${getAuthToken()}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (response.status === 200) {
+        if (browser) {
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+        }
     }
 }
