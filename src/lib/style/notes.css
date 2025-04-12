@@ -1,3 +1,12 @@
+.button-group-nav-notes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 1rem;
+    width: 29%;
+    height: 100%;
+}
+
 .page-content {
     width: 100vw;
     height: 88vh;

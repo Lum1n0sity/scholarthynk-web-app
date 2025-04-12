@@ -1,0 +1,8 @@
+.button-group-nav-admin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 1rem;
+    width: 28%;
+    height: 100%;
+}

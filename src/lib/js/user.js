@@ -28,7 +28,7 @@ export async function getUserData(authToken, testing = false) {
 
         if (response.status === 200) {
             const data = await response.json();
-            return {username: data.user.name, email: data.user.email};
+            return {username: data.user.name, email: data.user.email, role: data.user.role};
         } else if (response.status === 401) {
             if (!testing) {
                 const err = await response.json();

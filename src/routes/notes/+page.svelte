@@ -46,6 +46,7 @@
     let popupType = '';
 
     let displayNewNotification = false;
+    let isAdmin = false;
 
     /**
      * Adds a new notification to the notification queue and displays it immediately if the queue was previously empty
@@ -100,6 +101,7 @@
         let userData = await getUserData(authToken);
         username = userData.username;
         email = userData.email;
+        isAdmin = userData.role === "admin";
 
         profilePicture = await getProfilePic(authToken);
 
@@ -600,7 +602,10 @@
             <img src={logo} alt="logo" class="logo-img"/>
             <h1 class="logo-name">SCHOLARTHYNK</h1>
         </div>
-        <div class="button-group-nav" style="width: 19.3%">
+        <div class="button-group-nav-notes">
+            {#if isAdmin}
+                <a href="/admin" class="nav">Admin</a>
+            {/if}
             <a href="/home" class="nav">Dashboard</a>
             <button class="profile-pic" on:click={() => {displayUserCard = displayUserCardHandler(displayUserCard)}}>
                 <img src={profilePicture}

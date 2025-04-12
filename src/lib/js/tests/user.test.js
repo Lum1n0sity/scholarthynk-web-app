@@ -26,10 +26,10 @@ describe('getUserData', () => {
             .get('/api/user/data')
             .matchHeader('Authorization', 'Bearer auth-token')
             .matchHeader('Content-Type', 'application/json')
-            .reply(200, {user: {name: 'John Doe', email: 'email@example.com'}});
+            .reply(200, {user: {name: 'John Doe', email: 'email@example.com', role: 'user'}});
 
         const result = await getUserData(authToken, true);
-        expect(result).toEqual({username: 'John Doe', email: 'email@example.com'});
+        expect(result).toEqual({username: 'John Doe', email: 'email@example.com', role: 'user'});
     });
 
     it('should handle API error with 404 status code', async () => {
