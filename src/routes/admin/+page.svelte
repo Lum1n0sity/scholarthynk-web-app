@@ -82,6 +82,17 @@
 
         profilePicture = await getProfilePic(authToken);
     });
+
+    let logMessage = "";
+    let logType = "info";
+    let logEndpoint = "";
+    let logUser = "";
+
+    let isLogModalOpen = false;
+    let isMaintenanceEnabled = false;
+    let isForceLogoutEnabled = false;
+    let isRegistrationsDisabled = false;
+    let isUserModalOpen = false;
 </script>
 
 <div class="body">
@@ -100,7 +111,135 @@
                      class="profile-pic-img"/></button>
         </div>
     </div>
+    <div class="dashboard-content">
+        <div class="logs-column">
+            <h1 class="logs-title">Logs</h1>
+            <div class="logs">
+                <div class="log-item" on:click={isLogModalOpen = true}>
+                    <span class="material-symbols-rounded log-icon">info</span>
+                    <h2 class="log-item-title">Some message from the server</h2>
+                    <h2 class="log-item-date">07.04.2025</h2>
+                </div>
+            </div>
+            <div class="log-actions">
+                <select class="sort-method">
+                    <option value="displayAll">Display All</option>
+                    <option value="infoOnly">Info Only</option>
+                    <option value="warningOnly">Warnings Only</option>
+                    <option value="errorOnly">Errors Only</option>
+                </select>
+                <button class="delete-logs">Delete All</button>
+            </div>
+        </div>
+        <div class="statistic-column">
+            <div class="uptime">
+                <h2 class="statistic-title">Uptime</h2>
+            </div>
+            <div class="error-count">
+                <h2 class="statistic-title">Error count</h2>
+            </div>
+            <a href="/admin" class="statistic-view-all">View All</a>
+        </div>
+        <div class="users-maintenance-column">
+            <div class="users">
+                <h1 class="users-title">Users</h1>
+                <div class="user-list-wrapper">
+                    <div class="user-search">
+                        <input type="text" class="user-search-input" placeholder="Username...">
+                        <button class="search"><span class="material-symbols-rounded">search</span></button>
+                    </div>
+                    <div class="user-item" on:click={isUserModalOpen = true}>
+                        <h2 class="username">Username</h2>
+                        <div class="user-actions">
+                            <button class="user-action"><span class="material-symbols-rounded">settings</span></button>
+                            <button class="user-action"><span class="material-symbols-rounded">account_circle_off</span></button>
+                            <button class="user-action"><span class="material-symbols-rounded">add_moderator</span></button>
+                            <button class="user-action user-action-delete"><span class="material-symbols-rounded">delete</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="maintenance">
+                <div class="checkboxes">
+                    <label>
+                        <input type="checkbox" class="material-symbols-rounded" bind:checked={isMaintenanceEnabled}>
+                        <span class="custom-checkbox pp-box"></span>
+                        Maintenance Mode
+                    </label>
+                    <label>
+                        <input type="checkbox" class="material-symbols-rounded" bind:checked={isForceLogoutEnabled}>
+                        <span class="custom-checkbox pp-box"></span>
+                        Force logout all users
+                    </label>
+                    <label>
+                        <input type="checkbox" class="material-symbols-rounded" bind:checked={isRegistrationsDisabled}>
+                        <span class="custom-checkbox pp-box"></span>
+                        Disable new registrations
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+{#if isUserModalOpen}
+    <div class="user-modal-wrapper">
+        <div class="user-modal">
+            <div class="user-modal-header">
+                <div class="profile-picture"></div>
+                <h2 class="modal-username">Username</h2>
+                <div class="modal-role">
+                    <span class="material-symbols-rounded">admin_panel_settings</span>
+                </div>
+                <div class="close-wrapper">
+                    <button class="close-user-modal" on:click={isUserModalOpen = false}><span class="material-symbols-rounded">close</span></button>
+                </div>
+            </div>
+            <div class="info-wrapper">
+                <h2>Status</h2>
+                <div class="user-info">
+                    <h3>Online</h3>
+                </div>
+            </div>
+            <div class="info-wrapper">
+                <h2>Last Login</h2>
+                <div class="user-info">
+                    <h3>07.04.2025</h3>
+                </div>
+            </div>
+            <div class="info-wrapper">
+                <h2>Email</h2>
+                <!-- TODO: Add copy when email is clicked (copy to clipboard) -->
+                <div class="user-info">
+                    <h3>raphael221@outlook.de</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
+{#if isLogModalOpen}
+    <div class="log-modal-wrapper">
+        <div class="log-modal">
+            <div class="log-header">
+                <h1 class="log-title">Some message from the server</h1>
+                <button class="close-modal" on:click={() => {isLogModalOpen = false}}><span class="material-symbols-rounded">close</span></button>
+            </div>
+            <div class="log-details">
+                <div class="log-type">
+                    <span class="material-symbols-rounded">{logType === "info" ? "info" : logType === "warning" ? "warning" : "error"}</span>
+                </div>
+                <div class="endpoint">
+                    <p>{logEndpoint}</p>
+                </div>
+                <div class="user">
+                    <p>{logUser}</p>
+                </div>
+            </div>
+            <textarea class="log-text" readonly bind:value={logMessage}></textarea>
+        </div>
+    </div>
+{/if}
 
 {#if displayUserCard}
     <div class="user-card">
