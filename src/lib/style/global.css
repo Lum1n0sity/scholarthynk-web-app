@@ -42,6 +42,7 @@
   height: 7%;
   cursor: pointer;
   transition: .5s;
+  color: #fff;
 }
 
 .error-popup {
@@ -391,6 +392,7 @@
   margin: 2%;
   font-size: 1.5rem;
   align-self: flex-start;
+  color: #fff;
 }
 
 .notifications-clear:hover {
