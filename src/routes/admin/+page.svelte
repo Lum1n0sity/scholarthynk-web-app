@@ -1,11 +1,12 @@
 <script>
     import logo from '$lib/assets/logo.svg';
     import {onMount} from 'svelte';
+    import {goto} from "$app/navigation";
     import {getAuthToken, logout} from "$lib/js/auth.js";
     import {getUserData, getProfilePic, displayUserCardHandler, newNotificationU} from "$lib/js/user.js";
     import {notifications, addNotification, clearNotifications} from "$lib/js/notifications.js";
-    import {getFullCurrentDate} from "$lib/js/utils.js";
-    import {goto} from "$app/navigation";
+    import {formatDate, getFullCurrentDate} from "$lib/js/utils.js";
+    import {newNotificationAM, getLogs, updateLogSorting, translateLogLevel, deleteLog, deleteAllLogs} from "$lib/js/admin/logs.js";
 
     const authToken = getAuthToken();
 
@@ -48,6 +49,7 @@
 
     // Pass newNotification function to external js files
     newNotificationU(newNotification);
+    newNotificationAM(newNotification);
 
     /**
      * Displays the next message in the queue, or does nothing if the queue is empty
@@ -81,18 +83,84 @@
         }
 
         profilePicture = await getProfilePic(authToken);
+
+        await loadLogs();
     });
+
+    $: logsSortType, displayedLogs = updateLogSorting(logs, logsSortType);
+
+    let logs;
+    let displayedLogs;
+    let logsSortType = "displayAll";
 
     let logMessage = "";
     let logType = "info";
     let logEndpoint = "";
-    let logUser = "";
+    let logMethod = "";
+    let logId = "";
 
     let isLogModalOpen = false;
     let isMaintenanceEnabled = false;
     let isForceLogoutEnabled = false;
     let isRegistrationsDisabled = false;
     let isUserModalOpen = false;
+
+    function openLogModal(index) {
+        isLogModalOpen = true;
+        logMessage = displayedLogs[index].msg;
+        logType = translateLogLevel(displayedLogs[index].level);
+        logId = displayedLogs[index].id;
+
+        if ('url' in displayedLogs[index] && displayedLogs[index].url !== "") {
+            logEndpoint = displayedLogs[index].url;
+        } else if (displayedLogs[index].msg === "Server running on port 3000" || displayedLogs[index].msg === "MongoDB connected!") {
+            logEndpoint = "SERVER-START";
+        } else if (displayedLogs[index].msg.includes("Cron")) {
+            logEndpoint = "CRON-JOB";
+        } else {
+            logEndpoint = "NONE";
+        }
+
+        if ('method' in displayedLogs[index] && displayedLogs[index].method !== "") {
+            logMethod = displayedLogs[index].method;
+        } else {
+            logMethod = "NONE";
+        }
+    }
+
+    async function handleLogDelete() {
+        const success = await deleteLog(logId);
+
+        if (success) {
+            await loadLogs();
+            handleLogModalClose();
+        }
+    }
+
+    function handleLogModalClose() {
+        isLogModalOpen = false;
+
+        logMessage = "";
+        logType = "info";
+        logEndpoint = "";
+        logMethod = "";
+        logId = "";
+    }
+
+    async function handleDeleteALlLogs() {
+        const success = await deleteAllLogs();
+
+        if (success) {
+            await loadLogs();
+        }
+    }
+
+    async function loadLogs() {
+        logs = await getLogs();
+        logs = logs.logs.reverse();
+        displayedLogs = logs;
+        logsSortType = "displayAll";
+    }
 </script>
 
 <div class="body">
@@ -115,20 +183,26 @@
         <div class="logs-column">
             <h1 class="logs-title">Logs</h1>
             <div class="logs">
-                <div class="log-item" on:click={isLogModalOpen = true}>
-                    <span class="material-symbols-rounded log-icon">info</span>
-                    <h2 class="log-item-title">Some message from the server</h2>
-                    <h2 class="log-item-date">07.04.2025</h2>
-                </div>
+                {#each displayedLogs as log, index (log.id)}
+                    <div class="log-item" on:click={() => {openLogModal(index)}}>
+                        <span class="material-symbols-rounded log-icon">{translateLogLevel(log.level)}</span>
+                        <h2 class="log-item-title">{log.msg}</h2>
+                        <h2 class="log-item-date">{formatDate(log.time)}</h2>
+                    </div>
+                {/each}
             </div>
             <div class="log-actions">
-                <select class="sort-method">
+                <select class="sort-method" bind:value={logsSortType}>
                     <option value="displayAll">Display All</option>
+                    <option value="traceOnly">Trace Only</option>
+                    <option value="debugOnly">Debug Only</option>
                     <option value="infoOnly">Info Only</option>
                     <option value="warningOnly">Warnings Only</option>
                     <option value="errorOnly">Errors Only</option>
+                    <option value="fatalsOnly">Fatals Only</option>
                 </select>
-                <button class="delete-logs">Delete All</button>
+                <button class="delete-logs" on:click={handleDeleteALlLogs}>Clear Logs</button>
+                <button class="refresh-logs" on:click={loadLogs}><span class="material-symbols-rounded">refresh</span></button>
             </div>
         </div>
         <div class="statistic-column">
@@ -222,8 +296,8 @@
     <div class="log-modal-wrapper">
         <div class="log-modal">
             <div class="log-header">
-                <h1 class="log-title">Some message from the server</h1>
-                <button class="close-modal" on:click={() => {isLogModalOpen = false}}><span class="material-symbols-rounded">close</span></button>
+                <h1 class="log-title">{logMessage}</h1>
+                <button class="close-modal" on:click={handleLogModalClose}><span class="material-symbols-rounded">close</span></button>
             </div>
             <div class="log-details">
                 <div class="log-type">
@@ -232,9 +306,10 @@
                 <div class="endpoint">
                     <p>{logEndpoint}</p>
                 </div>
-                <div class="user">
-                    <p>{logUser}</p>
+                <div class="method">
+                    <p>{logMethod}</p>
                 </div>
+                <button class="delete-log" on:click={handleLogDelete}><span class="material-symbols-rounded">delete</span></button>
             </div>
             <textarea class="log-text" readonly bind:value={logMessage}></textarea>
         </div>
