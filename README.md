@@ -1,7 +1,7 @@
 # Scholarthynk
 The ScholarThynk Web Application is the frontend interface of the ScholarThynk platform, designed to enhance students' academic experiences. This React-based application offers a user-friendly environment for managing notes, assignments, and events.
 
-## Features
+## Features (WiP)
 - Personalized Dashboard: Provides an overview of upcoming assignments, events, and study suggestions tailored to the user's academic profile.
 - Note Management: Allows users to create, edit, and organize notes efficiently.
 - Assignment Tracking: Enables users to add, monitor, and receive reminders for assignments and deadlines.
